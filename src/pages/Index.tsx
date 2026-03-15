@@ -1,7 +1,7 @@
-import { PencilCanvas } from "@/components/canvas/PencilCanvas";
+import LandingPage from "@/components/landing/LandingPage";
 
 const Index = () => {
-  return <PencilCanvas />;
+  return <LandingPage />;
 };
 
 export default Index;
