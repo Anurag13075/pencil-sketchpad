@@ -2,7 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import {
   MousePointer2, Square, Circle, Diamond, Minus, MoveRight,
-  Pencil, Type, Eraser, Undo2, Redo2, Download, Trash2
+  Pencil, Type, Eraser, Undo2, Redo2, Download, Trash2, Sparkles
 } from "lucide-react";
 import type { Tool } from "@/types/canvas";
 
@@ -56,6 +56,16 @@ export function InstrumentTray({
           <Icon size={18} strokeWidth={1.5} />
         </button>
       ))}
+
+      <div className="w-px h-6 bg-border mx-1" />
+
+      <button
+        className={`tool-btn ${activeTool === "ai-image" ? "active" : ""}`}
+        onClick={() => onToolChange("ai-image")}
+        title="AI Image Generation"
+      >
+        <Sparkles size={18} strokeWidth={1.5} />
+      </button>
 
       <div className="w-px h-6 bg-border mx-1" />
 
