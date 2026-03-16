@@ -6,6 +6,7 @@ import { createElement, drawElement, hitTest, getHandleAtPoint, resizeElement, g
 import { InstrumentTray } from "./InstrumentTray";
 import { StatusBar } from "./StatusBar";
 import { PropertyInspector } from "./PropertyInspector";
+import { AIImageDialog } from "./AIImageDialog";
 
 type Action =
   | { type: "none" }
@@ -38,6 +39,7 @@ export function PencilCanvas() {
   // Text editing
   const [editingText, setEditingText] = useState<{ id: string; x: number; y: number } | null>(null);
   const [textValue, setTextValue] = useState("");
+  const [showAIDialog, setShowAIDialog] = useState(false);
 
   const elementsRef = useRef(elements);
   elementsRef.current = elements;
@@ -177,6 +179,11 @@ export function PencilCanvas() {
         return;
       }
 
+      if (tool === "ai-image") {
+        setShowAIDialog(true);
+        return;
+      }
+
       // Create new element
       const id = nanoid();
       const newEl = createElement(id, tool, cx, cy, strokeColor, fillColor, fillStyle, strokeWidth, strokeStyle, opacity, 0);
@@ -285,6 +292,13 @@ export function PencilCanvas() {
     },
     [zoom, panOffset]
   );
+
+  // Open AI dialog when ai-image tool selected
+  useEffect(() => {
+    if (tool === "ai-image") {
+      setShowAIDialog(true);
+    }
+  }, [tool]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -446,10 +460,26 @@ export function PencilCanvas() {
     updateSelectedStyles({ opacity: o });
   }, [updateSelectedStyles]);
 
+  const handleAIImageGenerated = useCallback((imageData: string, width: number, height: number) => {
+    const id = nanoid();
+    const el = createElement(id, "ai-image" as Tool, cursorPos.x - width / 2, cursorPos.y - height / 2, strokeColor, fillColor, fillStyle, strokeWidth, strokeStyle, opacity, 0);
+    el.width = width;
+    el.height = height;
+    el.imageData = imageData;
+    el.imageLoaded = true;
+    const newElements = [...elementsRef.current, el];
+    setElements(newElements);
+    commit(newElements);
+    setSelectedIds(new Set([id]));
+    setShowAIDialog(false);
+    setTool("select");
+  }, [cursorPos, strokeColor, fillColor, fillStyle, strokeWidth, strokeStyle, opacity, setElements, commit]);
+
   const getCursor = () => {
     if (tool === "select") return action.type === "panning" ? "grabbing" : "default";
     if (tool === "eraser") return "crosshair";
     if (tool === "text") return "text";
+    if (tool === "ai-image") return "crosshair";
     return "crosshair";
   };
 
@@ -536,6 +566,12 @@ export function PencilCanvas() {
         elementCount={elements.filter((e) => !e.isDeleted).length}
         gridEnabled={gridEnabled}
         onToggleGrid={() => setGridEnabled((g) => !g)}
+      />
+
+      <AIImageDialog
+        visible={showAIDialog}
+        onClose={() => { setShowAIDialog(false); setTool("select"); }}
+        onImageGenerated={handleAIImageGenerated}
       />
     </div>
   );
