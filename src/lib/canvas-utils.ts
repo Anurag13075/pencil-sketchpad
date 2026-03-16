@@ -289,6 +289,47 @@ function drawText(ctx: CanvasRenderingContext2D, el: CanvasElement) {
   });
 }
 
+// Image cache for AI-generated images
+const imageCache = new Map<string, HTMLImageElement>();
+
+function drawImage(ctx: CanvasRenderingContext2D, el: CanvasElement, b: { x: number; y: number; w: number; h: number }) {
+  if (!el.imageData) {
+    // Draw placeholder
+    ctx.fillStyle = "hsl(210, 10%, 92%)";
+    ctx.fillRect(b.x, b.y, b.w || 200, b.h || 200);
+    ctx.fillStyle = "hsl(210, 10%, 50%)";
+    ctx.font = "14px Inter, system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("AI Image loading...", b.x + (b.w || 200) / 2, b.y + (b.h || 200) / 2);
+    ctx.textAlign = "start";
+    return;
+  }
+
+  let img = imageCache.get(el.id);
+  if (!img) {
+    img = new Image();
+    img.src = el.imageData;
+    imageCache.set(el.id, img);
+    img.onload = () => {
+      // Image loaded - next render will draw it
+    };
+  }
+  
+  if (img.complete && img.naturalWidth > 0) {
+    ctx.drawImage(img, b.x, b.y, b.w || img.naturalWidth, b.h || img.naturalHeight);
+  } else {
+    ctx.fillStyle = "hsl(210, 10%, 92%)";
+    ctx.fillRect(b.x, b.y, b.w || 200, b.h || 200);
+    ctx.fillStyle = "hsl(210, 10%, 50%)";
+    ctx.font = "14px Inter, system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("Loading...", b.x + (b.w || 200) / 2, b.y + (b.h || 200) / 2);
+    ctx.textAlign = "start";
+  }
+}
+
 function drawSelectionBox(ctx: CanvasRenderingContext2D, el: CanvasElement, zoom: number) {
   const b = getElementBounds(el);
   const pad = 4;
