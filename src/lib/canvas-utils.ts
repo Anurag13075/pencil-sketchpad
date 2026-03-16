@@ -192,6 +192,9 @@ export function drawElement(
     case "text":
       drawText(ctx, el);
       break;
+    case "ai-image":
+      drawImage(ctx, el, b);
+      break;
   }
 
   ctx.restore();
