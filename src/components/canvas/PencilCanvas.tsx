@@ -293,6 +293,13 @@ export function PencilCanvas() {
     [zoom, panOffset]
   );
 
+  // Open AI dialog when ai-image tool selected
+  useEffect(() => {
+    if (tool === "ai-image") {
+      setShowAIDialog(true);
+    }
+  }, [tool]);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
