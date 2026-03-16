@@ -39,6 +39,7 @@ export function PencilCanvas() {
   // Text editing
   const [editingText, setEditingText] = useState<{ id: string; x: number; y: number } | null>(null);
   const [textValue, setTextValue] = useState("");
+  const [showAIDialog, setShowAIDialog] = useState(false);
 
   const elementsRef = useRef(elements);
   elementsRef.current = elements;
