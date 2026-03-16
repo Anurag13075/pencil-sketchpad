@@ -453,10 +453,26 @@ export function PencilCanvas() {
     updateSelectedStyles({ opacity: o });
   }, [updateSelectedStyles]);
 
+  const handleAIImageGenerated = useCallback((imageData: string, width: number, height: number) => {
+    const id = nanoid();
+    const el = createElement(id, "ai-image" as Tool, cursorPos.x - width / 2, cursorPos.y - height / 2, strokeColor, fillColor, fillStyle, strokeWidth, strokeStyle, opacity, 0);
+    el.width = width;
+    el.height = height;
+    el.imageData = imageData;
+    el.imageLoaded = true;
+    const newElements = [...elementsRef.current, el];
+    setElements(newElements);
+    commit(newElements);
+    setSelectedIds(new Set([id]));
+    setShowAIDialog(false);
+    setTool("select");
+  }, [cursorPos, strokeColor, fillColor, fillStyle, strokeWidth, strokeStyle, opacity, setElements, commit]);
+
   const getCursor = () => {
     if (tool === "select") return action.type === "panning" ? "grabbing" : "default";
     if (tool === "eraser") return "crosshair";
     if (tool === "text") return "text";
+    if (tool === "ai-image") return "crosshair";
     return "crosshair";
   };
 
