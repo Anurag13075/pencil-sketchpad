@@ -560,6 +560,12 @@ export function PencilCanvas() {
         gridEnabled={gridEnabled}
         onToggleGrid={() => setGridEnabled((g) => !g)}
       />
+
+      <AIImageDialog
+        visible={showAIDialog}
+        onClose={() => { setShowAIDialog(false); setTool("select"); }}
+        onImageGenerated={handleAIImageGenerated}
+      />
     </div>
   );
 }
