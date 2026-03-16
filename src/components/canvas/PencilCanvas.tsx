@@ -179,6 +179,11 @@ export function PencilCanvas() {
         return;
       }
 
+      if (tool === "ai-image") {
+        setShowAIDialog(true);
+        return;
+      }
+
       // Create new element
       const id = nanoid();
       const newEl = createElement(id, tool, cx, cy, strokeColor, fillColor, fillStyle, strokeWidth, strokeStyle, opacity, 0);
