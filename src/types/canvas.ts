@@ -42,6 +42,8 @@ export interface CanvasElement {
   roughness: number;
   seed: number;
   isDeleted?: boolean;
+  imageData?: string;
+  imageLoaded?: boolean;
 }
 
 export type HandlePosition =
