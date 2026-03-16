@@ -6,6 +6,7 @@ import { createElement, drawElement, hitTest, getHandleAtPoint, resizeElement, g
 import { InstrumentTray } from "./InstrumentTray";
 import { StatusBar } from "./StatusBar";
 import { PropertyInspector } from "./PropertyInspector";
+import { AIImageDialog } from "./AIImageDialog";
 
 type Action =
   | { type: "none" }
