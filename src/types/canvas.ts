@@ -7,7 +7,13 @@ export type Tool =
   | "arrow"
   | "freedraw"
   | "text"
-  | "eraser";
+  | "eraser"
+  | "ai-image";
+
+export interface ImageElement {
+  imageData?: string; // base64 data URL
+  imageLoaded?: boolean;
+}
 
 export type StrokeStyle = "solid" | "dashed" | "dotted";
 export type FillStyle = "none" | "solid" | "hachure" | "cross-hatch";
