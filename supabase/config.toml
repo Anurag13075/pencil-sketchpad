@@ -1,1 +1,4 @@
 project_id = "nbugxtqfzmdocqsrzyda"
+
+[functions.generate-image]
+verify_jwt = false
