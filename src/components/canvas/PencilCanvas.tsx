@@ -31,7 +31,7 @@ export function PencilCanvas() {
   const [panOffset, setPanOffset] = useState<Point>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [cursorPos, setCursorPos] = useState<Point>({ x: 0, y: 0 });
-  const [gridEnabled, setGridEnabled] = useState(true);
+  const [gridEnabled, setGridEnabled] = useState(false);
   const [action, setAction] = useState<Action>({ type: "none" });
 
   // Style state
@@ -676,9 +676,12 @@ function drawGrid(ctx: CanvasRenderingContext2D, w: number, h: number, pan: Poin
 
   const style = getComputedStyle(document.documentElement);
   const gridColor = style.getPropertyValue("--grid-major").trim() || "210 10% 10%";
+  const isDark = document.documentElement.classList.contains("dark");
+  const minorAlpha = isDark ? 0.05 : 0.025;
+  const majorAlpha = isDark ? 0.09 : 0.05;
 
   // Minor grid
-  ctx.strokeStyle = `hsla(${gridColor}, 0.04)`;
+  ctx.strokeStyle = `hsla(${gridColor}, ${minorAlpha})`;
   ctx.lineWidth = 0.5;
   ctx.beginPath();
   for (let x = minorStartX; x < w; x += minorSize) {
@@ -692,7 +695,7 @@ function drawGrid(ctx: CanvasRenderingContext2D, w: number, h: number, pan: Poin
   ctx.stroke();
 
   // Major grid
-  ctx.strokeStyle = `hsla(${gridColor}, 0.08)`;
+  ctx.strokeStyle = `hsla(${gridColor}, ${majorAlpha})`;
   ctx.lineWidth = 0.5;
   ctx.beginPath();
   for (let x = startX; x < w; x += majorSize) {
