@@ -46,6 +46,10 @@ export function PencilCanvas() {
   const [editingText, setEditingText] = useState<{ id: string; x: number; y: number } | null>(null);
   const [textValue, setTextValue] = useState("");
   const [showAIDialog, setShowAIDialog] = useState(false);
+  const [showPromptDialog, setShowPromptDialog] = useState(false);
+  const [showExplainPanel, setShowExplainPanel] = useState(false);
+
+  const { user, signOut } = useAuth();
 
   const elementsRef = useRef(elements);
   elementsRef.current = elements;
@@ -116,6 +120,14 @@ export function PencilCanvas() {
     });
     observer.observe(canvas);
     return () => observer.disconnect();
+  }, [setElements]);
+
+  // Re-render when AI images finish loading
+  useEffect(() => {
+    setImageLoadListener(() => {
+      setElements((prev) => [...prev]);
+    });
+    return () => setImageLoadListener(() => {});
   }, [setElements]);
 
   // Mouse handlers
