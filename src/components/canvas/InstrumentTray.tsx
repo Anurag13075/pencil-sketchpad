@@ -2,7 +2,8 @@ import React from "react";
 import { motion } from "framer-motion";
 import {
   MousePointer2, Square, Circle, Diamond, Minus, MoveRight,
-  Pencil, Type, Eraser, Undo2, Redo2, Download, Trash2, Sparkles
+  Pencil, Type, Eraser, Undo2, Redo2, Download, Trash2, Sparkles,
+  Wand2, BookOpen
 } from "lucide-react";
 import type { Tool } from "@/types/canvas";
 
@@ -13,6 +14,9 @@ interface InstrumentTrayProps {
   onRedo: () => void;
   onClear: () => void;
   onExport: () => void;
+  onAIImage: () => void;
+  onPromptToDiagram: () => void;
+  onExplainDiagram: () => void;
   canUndo: boolean;
   canRedo: boolean;
 }
@@ -36,6 +40,9 @@ export function InstrumentTray({
   onRedo,
   onClear,
   onExport,
+  onAIImage,
+  onPromptToDiagram,
+  onExplainDiagram,
   canUndo,
   canRedo,
 }: InstrumentTrayProps) {
@@ -60,11 +67,25 @@ export function InstrumentTray({
       <div className="w-px h-6 bg-border mx-1" />
 
       <button
-        className={`tool-btn ${activeTool === "ai-image" ? "active" : ""}`}
-        onClick={() => onToolChange("ai-image")}
+        className="tool-btn text-primary"
+        onClick={onPromptToDiagram}
+        title="Prompt to Diagram (AI)"
+      >
+        <Wand2 size={18} strokeWidth={1.5} />
+      </button>
+      <button
+        className="tool-btn text-primary"
+        onClick={onAIImage}
         title="AI Image Generation"
       >
         <Sparkles size={18} strokeWidth={1.5} />
+      </button>
+      <button
+        className="tool-btn text-primary"
+        onClick={onExplainDiagram}
+        title="Explain my diagram (AI)"
+      >
+        <BookOpen size={18} strokeWidth={1.5} />
       </button>
 
       <div className="w-px h-6 bg-border mx-1" />

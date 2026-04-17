@@ -3,6 +3,7 @@ import { Hero } from "./sections/Hero";
 import { LogoBar } from "./sections/LogoBar";
 import { ToolShowcase } from "./sections/ToolShowcase";
 import { FeatureDeepDives } from "./sections/FeatureDeepDives";
+import { UniqueFeatures } from "./sections/UniqueFeatures";
 import { AIFeature } from "./sections/AIFeature";
 import { Features } from "./sections/Features";
 import { KeyboardShortcuts } from "./sections/KeyboardShortcuts";
@@ -20,6 +21,7 @@ export default function LandingPage() {
       <Navbar />
       <Hero />
       <LogoBar />
+      <UniqueFeatures />
       <ToolShowcase />
       <FeatureDeepDives />
       <AIFeature />

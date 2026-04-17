@@ -1,12 +1,18 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import { LogIn, User as UserIcon, LogOut } from "lucide-react";
 import { nanoid } from "nanoid";
 import type { Tool, CanvasElement, HandlePosition, Point, FillStyle, StrokeStyle } from "@/types/canvas";
 import { useCanvasHistory } from "@/hooks/use-canvas-history";
-import { createElement, drawElement, hitTest, getHandleAtPoint, resizeElement, getElementBounds } from "@/lib/canvas-utils";
+import { createElement, drawElement, hitTest, getHandleAtPoint, resizeElement, getElementBounds, setImageLoadListener } from "@/lib/canvas-utils";
 import { InstrumentTray } from "./InstrumentTray";
 import { StatusBar } from "./StatusBar";
 import { PropertyInspector } from "./PropertyInspector";
 import { AIImageDialog } from "./AIImageDialog";
+import { PromptToDiagramDialog, type DiagramElement } from "./PromptToDiagramDialog";
+import { ExplainDiagramPanel } from "./ExplainDiagramPanel";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { useAuth } from "@/hooks/use-auth";
 
 type Action =
   | { type: "none" }
@@ -40,6 +46,10 @@ export function PencilCanvas() {
   const [editingText, setEditingText] = useState<{ id: string; x: number; y: number } | null>(null);
   const [textValue, setTextValue] = useState("");
   const [showAIDialog, setShowAIDialog] = useState(false);
+  const [showPromptDialog, setShowPromptDialog] = useState(false);
+  const [showExplainPanel, setShowExplainPanel] = useState(false);
+
+  const { user, signOut } = useAuth();
 
   const elementsRef = useRef(elements);
   elementsRef.current = elements;
@@ -110,6 +120,14 @@ export function PencilCanvas() {
     });
     observer.observe(canvas);
     return () => observer.disconnect();
+  }, [setElements]);
+
+  // Re-render when AI images finish loading
+  useEffect(() => {
+    setImageLoadListener(() => {
+      setElements((prev) => [...prev]);
+    });
+    return () => setImageLoadListener(() => {});
   }, [setElements]);
 
   // Mouse handlers
@@ -461,8 +479,13 @@ export function PencilCanvas() {
   }, [updateSelectedStyles]);
 
   const handleAIImageGenerated = useCallback((imageData: string, width: number, height: number) => {
+    const canvas = canvasRef.current;
+    const rect = canvas?.getBoundingClientRect();
+    // Center of viewport in canvas coords
+    const cx = rect ? (rect.width / 2 - panOffset.x) / zoom : cursorPos.x;
+    const cy = rect ? (rect.height / 2 - panOffset.y) / zoom : cursorPos.y;
     const id = nanoid();
-    const el = createElement(id, "ai-image" as Tool, cursorPos.x - width / 2, cursorPos.y - height / 2, strokeColor, fillColor, fillStyle, strokeWidth, strokeStyle, opacity, 0);
+    const el = createElement(id, "ai-image" as Tool, cx - width / 2, cy - height / 2, strokeColor, fillColor, fillStyle, strokeWidth, strokeStyle, opacity, 0);
     el.width = width;
     el.height = height;
     el.imageData = imageData;
@@ -473,7 +496,34 @@ export function PencilCanvas() {
     setSelectedIds(new Set([id]));
     setShowAIDialog(false);
     setTool("select");
-  }, [cursorPos, strokeColor, fillColor, fillStyle, strokeWidth, strokeStyle, opacity, setElements, commit]);
+  }, [panOffset, zoom, cursorPos, strokeColor, fillColor, fillStyle, strokeWidth, strokeStyle, opacity, setElements, commit]);
+
+  const handleDiagramGenerated = useCallback((diagramElements: DiagramElement[]) => {
+    const canvas = canvasRef.current;
+    const rect = canvas?.getBoundingClientRect();
+    // Center the diagram (1000x600 canonical) in viewport
+    const vx = rect ? (rect.width / 2 - panOffset.x) / zoom : 0;
+    const vy = rect ? (rect.height / 2 - panOffset.y) / zoom : 0;
+    const offsetX = vx - 500;
+    const offsetY = vy - 300;
+
+    const newOnes: CanvasElement[] = diagramElements.map((d) => {
+      const id = nanoid();
+      const stroke = d.strokeColor || "#1e1e1e";
+      const fill = d.fillColor || "transparent";
+      const fillStyleVal: FillStyle = fill !== "transparent" ? "solid" : "none";
+      const el = createElement(id, d.type as Tool, d.x + offsetX, d.y + offsetY, stroke, fill, fillStyleVal, 2, "solid", 1, 0);
+      el.width = d.width;
+      el.height = d.height;
+      if (d.text) el.text = d.text;
+      return el;
+    });
+    const merged = [...elementsRef.current, ...newOnes];
+    setElements(merged);
+    commit(merged);
+    setSelectedIds(new Set(newOnes.map((e) => e.id)));
+    setShowPromptDialog(false);
+  }, [panOffset, zoom, setElements, commit]);
 
   const getCursor = () => {
     if (tool === "select") return action.type === "panning" ? "grabbing" : "default";
@@ -524,12 +574,35 @@ export function PencilCanvas() {
         />
       )}
 
-      {/* Title */}
+      {/* Title + auth chip */}
       <div className="fixed top-3 left-3 z-50 flex items-center gap-2">
-        <div className="px-3 py-1.5 border rounded-md bg-background/85 backdrop-blur-xl">
+        <Link to="/" className="px-3 py-1.5 border rounded-md bg-background/85 backdrop-blur-xl hover:bg-muted transition">
           <span className="text-sm font-semibold tracking-tight text-foreground">Pencil</span>
           <span className="text-xs text-muted-foreground ml-1.5">Draft</span>
-        </div>
+        </Link>
+        <ThemeToggle className="border bg-background/85 backdrop-blur-xl" />
+        {user ? (
+          <div className="flex items-center gap-1 px-2.5 py-1.5 border rounded-md bg-background/85 backdrop-blur-xl">
+            {user.user_metadata?.avatar_url ? (
+              <img src={user.user_metadata.avatar_url} alt="" className="w-5 h-5 rounded-full" />
+            ) : (
+              <UserIcon size={13} className="text-muted-foreground" />
+            )}
+            <span className="text-xs text-foreground max-w-[120px] truncate">
+              {user.user_metadata?.full_name || user.email}
+            </span>
+            <button onClick={signOut} title="Sign out" className="ml-1 text-muted-foreground hover:text-foreground">
+              <LogOut size={12} />
+            </button>
+          </div>
+        ) : (
+          <Link
+            to="/auth"
+            className="flex items-center gap-1.5 px-3 py-1.5 border rounded-md bg-background/85 backdrop-blur-xl text-xs text-foreground hover:bg-muted transition"
+          >
+            <LogIn size={12} /> Sign in
+          </Link>
+        )}
       </div>
 
       <InstrumentTray
@@ -539,6 +612,9 @@ export function PencilCanvas() {
         onRedo={redo}
         onClear={handleClear}
         onExport={exportCanvas}
+        onAIImage={() => setShowAIDialog(true)}
+        onPromptToDiagram={() => setShowPromptDialog(true)}
+        onExplainDiagram={() => setShowExplainPanel(true)}
         canUndo={canUndo}
         canRedo={canRedo}
       />
@@ -570,8 +646,20 @@ export function PencilCanvas() {
 
       <AIImageDialog
         visible={showAIDialog}
-        onClose={() => { setShowAIDialog(false); setTool("select"); }}
+        onClose={() => { setShowAIDialog(false); if (tool === "ai-image") setTool("select"); }}
         onImageGenerated={handleAIImageGenerated}
+      />
+
+      <PromptToDiagramDialog
+        visible={showPromptDialog}
+        onClose={() => setShowPromptDialog(false)}
+        onDiagramGenerated={handleDiagramGenerated}
+      />
+
+      <ExplainDiagramPanel
+        visible={showExplainPanel}
+        onClose={() => setShowExplainPanel(false)}
+        elements={elements}
       />
     </div>
   );
@@ -586,8 +674,11 @@ function drawGrid(ctx: CanvasRenderingContext2D, w: number, h: number, pan: Poin
   const minorStartX = pan.x % minorSize;
   const minorStartY = pan.y % minorSize;
 
+  const style = getComputedStyle(document.documentElement);
+  const gridColor = style.getPropertyValue("--grid-major").trim() || "210 10% 10%";
+
   // Minor grid
-  ctx.strokeStyle = "hsla(210, 10%, 10%, 0.03)";
+  ctx.strokeStyle = `hsla(${gridColor}, 0.04)`;
   ctx.lineWidth = 0.5;
   ctx.beginPath();
   for (let x = minorStartX; x < w; x += minorSize) {
@@ -601,7 +692,7 @@ function drawGrid(ctx: CanvasRenderingContext2D, w: number, h: number, pan: Poin
   ctx.stroke();
 
   // Major grid
-  ctx.strokeStyle = "hsla(210, 10%, 10%, 0.06)";
+  ctx.strokeStyle = `hsla(${gridColor}, 0.08)`;
   ctx.lineWidth = 0.5;
   ctx.beginPath();
   for (let x = startX; x < w; x += majorSize) {
