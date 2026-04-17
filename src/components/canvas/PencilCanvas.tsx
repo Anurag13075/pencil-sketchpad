@@ -674,8 +674,11 @@ function drawGrid(ctx: CanvasRenderingContext2D, w: number, h: number, pan: Poin
   const minorStartX = pan.x % minorSize;
   const minorStartY = pan.y % minorSize;
 
+  const style = getComputedStyle(document.documentElement);
+  const gridColor = style.getPropertyValue("--grid-major").trim() || "210 10% 10%";
+
   // Minor grid
-  ctx.strokeStyle = "hsla(210, 10%, 10%, 0.03)";
+  ctx.strokeStyle = `hsla(${gridColor}, 0.04)`;
   ctx.lineWidth = 0.5;
   ctx.beginPath();
   for (let x = minorStartX; x < w; x += minorSize) {
@@ -689,7 +692,7 @@ function drawGrid(ctx: CanvasRenderingContext2D, w: number, h: number, pan: Poin
   ctx.stroke();
 
   // Major grid
-  ctx.strokeStyle = "hsla(210, 10%, 10%, 0.06)";
+  ctx.strokeStyle = `hsla(${gridColor}, 0.08)`;
   ctx.lineWidth = 0.5;
   ctx.beginPath();
   for (let x = startX; x < w; x += majorSize) {
