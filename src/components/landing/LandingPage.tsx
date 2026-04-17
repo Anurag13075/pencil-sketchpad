@@ -1,6 +1,8 @@
 import { Navbar } from "./sections/Navbar";
 import { Hero } from "./sections/Hero";
 import { LogoBar } from "./sections/LogoBar";
+import { DiagramTypes } from "./sections/DiagramTypes";
+import { AIPromptShowcase } from "./sections/AIPromptShowcase";
 import { ToolShowcase } from "./sections/ToolShowcase";
 import { FeatureDeepDives } from "./sections/FeatureDeepDives";
 import { UniqueFeatures } from "./sections/UniqueFeatures";
@@ -21,7 +23,9 @@ export default function LandingPage() {
       <Navbar />
       <Hero />
       <LogoBar />
+      <DiagramTypes />
       <UniqueFeatures />
+      <AIPromptShowcase />
       <ToolShowcase />
       <FeatureDeepDives />
       <AIFeature />
