@@ -1,12 +1,18 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import { LogIn, User as UserIcon, LogOut } from "lucide-react";
 import { nanoid } from "nanoid";
 import type { Tool, CanvasElement, HandlePosition, Point, FillStyle, StrokeStyle } from "@/types/canvas";
 import { useCanvasHistory } from "@/hooks/use-canvas-history";
-import { createElement, drawElement, hitTest, getHandleAtPoint, resizeElement, getElementBounds } from "@/lib/canvas-utils";
+import { createElement, drawElement, hitTest, getHandleAtPoint, resizeElement, getElementBounds, setImageLoadListener } from "@/lib/canvas-utils";
 import { InstrumentTray } from "./InstrumentTray";
 import { StatusBar } from "./StatusBar";
 import { PropertyInspector } from "./PropertyInspector";
 import { AIImageDialog } from "./AIImageDialog";
+import { PromptToDiagramDialog, type DiagramElement } from "./PromptToDiagramDialog";
+import { ExplainDiagramPanel } from "./ExplainDiagramPanel";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { useAuth } from "@/hooks/use-auth";
 
 type Action =
   | { type: "none" }
