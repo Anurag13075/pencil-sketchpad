@@ -11,6 +11,7 @@ import { PropertyInspector } from "./PropertyInspector";
 import { AIImageDialog } from "./AIImageDialog";
 import { PromptToDiagramDialog, type DiagramElement } from "./PromptToDiagramDialog";
 import { ExplainDiagramPanel } from "./ExplainDiagramPanel";
+import { IconLibraryDialog } from "./IconLibraryDialog";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -48,6 +49,7 @@ export function PencilCanvas() {
   const [showAIDialog, setShowAIDialog] = useState(false);
   const [showPromptDialog, setShowPromptDialog] = useState(false);
   const [showExplainPanel, setShowExplainPanel] = useState(false);
+  const [showIconLibrary, setShowIconLibrary] = useState(false);
 
   const { user, signOut } = useAuth();
 
@@ -615,6 +617,7 @@ export function PencilCanvas() {
         onAIImage={() => setShowAIDialog(true)}
         onPromptToDiagram={() => setShowPromptDialog(true)}
         onExplainDiagram={() => setShowExplainPanel(true)}
+        onIconLibrary={() => setShowIconLibrary(true)}
         canUndo={canUndo}
         canRedo={canRedo}
       />
@@ -660,6 +663,30 @@ export function PencilCanvas() {
         visible={showExplainPanel}
         onClose={() => setShowExplainPanel(false)}
         elements={elements}
+      />
+
+      <IconLibraryDialog
+        visible={showIconLibrary}
+        onClose={() => setShowIconLibrary(false)}
+        onSelect={(dataUrl) => {
+          const canvas = canvasRef.current;
+          const rect = canvas?.getBoundingClientRect();
+          const size = 80;
+          const cx = rect ? (rect.width / 2 - panOffset.x) / zoom : 0;
+          const cy = rect ? (rect.height / 2 - panOffset.y) / zoom : 0;
+          const id = nanoid();
+          const el = createElement(id, "ai-image" as Tool, cx - size / 2, cy - size / 2, strokeColor, fillColor, fillStyle, strokeWidth, strokeStyle, opacity, 0);
+          el.width = size;
+          el.height = size;
+          el.imageData = dataUrl;
+          el.imageLoaded = true;
+          const newElements = [...elementsRef.current, el];
+          setElements(newElements);
+          commit(newElements);
+          setSelectedIds(new Set([id]));
+          setShowIconLibrary(false);
+          setTool("select");
+        }}
       />
     </div>
   );

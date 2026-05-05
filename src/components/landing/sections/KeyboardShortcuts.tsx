@@ -50,7 +50,7 @@ export function KeyboardShortcuts() {
             </div>
 
             <Link
-              to="/canvas"
+              to="/onboarding"
               className="inline-flex h-10 px-5 rounded-lg bg-primary text-primary-foreground text-sm font-medium items-center gap-2 hover:opacity-90 transition-all active:scale-[0.97]"
             >
               Try it now <Keyboard size={15} />
