@@ -83,7 +83,7 @@ export function Hero() {
           transition={{ ...spring, delay: 0.45 }}
         >
           <Link
-            to="/canvas"
+            to="/onboarding"
             className="h-12 px-8 rounded-xl bg-primary text-primary-foreground font-medium flex items-center gap-2 hover:opacity-90 transition-all active:scale-[0.97] text-sm shadow-lg shadow-primary/20"
           >
             Start Drawing — It's Free <ArrowRight size={16} />
