@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Pencil as PencilIcon, ArrowLeft, Loader2 } from "lucide-react";
 import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -11,15 +12,46 @@ export default function AuthPage() {
   const [signingIn, setSigningIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // After auth: persist any pending onboarding answers, then route appropriately
   useEffect(() => {
-    if (!loading && user) navigate("/canvas", { replace: true });
+    if (loading || !user) return;
+    (async () => {
+      let pending: Record<string, string> | null = null;
+      try {
+        const raw = localStorage.getItem("pencil:onboarding");
+        if (raw) pending = JSON.parse(raw);
+      } catch {}
+
+      if (pending && Object.keys(pending).length > 0) {
+        await supabase
+          .from("profiles")
+          .update({ ...pending, onboarded_at: new Date().toISOString() })
+          .eq("user_id", user.id);
+        try { localStorage.removeItem("pencil:onboarding"); } catch {}
+        navigate("/canvas", { replace: true });
+        return;
+      }
+
+      // No pending answers — check if profile is already onboarded
+      const { data } = await supabase
+        .from("profiles")
+        .select("onboarded_at")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (data?.onboarded_at) {
+        navigate("/canvas", { replace: true });
+      } else {
+        navigate("/onboarding", { replace: true });
+      }
+    })();
   }, [user, loading, navigate]);
 
   const handleGoogleSignIn = async () => {
     setSigningIn(true);
     setError(null);
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin + "/canvas",
+      redirect_uri: window.location.origin + "/auth",
     });
     if (result.error) {
       setError(result.error.message || "Sign in failed");
@@ -27,7 +59,6 @@ export default function AuthPage() {
       return;
     }
     if (result.redirected) return;
-    navigate("/canvas", { replace: true });
   };
 
   return (
