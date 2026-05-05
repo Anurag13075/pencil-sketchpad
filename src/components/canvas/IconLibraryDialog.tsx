@@ -21,15 +21,7 @@ const EXCLUDE = new Set([
   "LucideProps",
 ]);
 
-const ALL_ICON_NAMES = Object.keys(LucideIcons).filter(
-  (k) =>
-    !EXCLUDE.has(k) &&
-    /^[A-Z]/.test(k) &&
-    !k.endsWith("Icon") === false === false && // keep all Pascal-cased
-    typeof (LucideIcons as any)[k] === "object" || typeof (LucideIcons as any)[k] === "function"
-);
-
-// Better filter
+// Build a list of all available Lucide icons
 const ICON_NAMES = Object.keys(LucideIcons).filter((k) => {
   if (EXCLUDE.has(k)) return false;
   if (!/^[A-Z]/.test(k)) return false;
