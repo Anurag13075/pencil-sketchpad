@@ -71,15 +71,26 @@ const QUESTIONS: Question[] = [
 
 export default function OnboardingPage() {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [submitting, setSubmitting] = useState(false);
 
+  // If already signed in & onboarded, skip straight to canvas
   useEffect(() => {
-    if (loading) return;
-    if (!user) navigate("/auth", { replace: true });
-  }, [user, loading, navigate]);
+    let cancelled = false;
+    (async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("onboarded_at")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (!cancelled && data?.onboarded_at) {
+        navigate("/canvas", { replace: true });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user, navigate]);
 
   const q = QUESTIONS[step];
   const progress = ((step + 1) / QUESTIONS.length) * 100;
@@ -94,16 +105,25 @@ export default function OnboardingPage() {
       return;
     }
 
-    if (!user) return;
-    setSubmitting(true);
-    await supabase
-      .from("profiles")
-      .update({ ...next, onboarded_at: new Date().toISOString() })
-      .eq("user_id", user.id);
-    navigate("/canvas", { replace: true });
-  };
+    // Persist answers locally so AuthPage can write them after sign-in
+    try {
+      localStorage.setItem("pencil:onboarding", JSON.stringify(next));
+    } catch {}
 
-  if (loading || !user) return null;
+    // If already signed in, save now and go to canvas
+    if (user) {
+      await supabase
+        .from("profiles")
+        .update({ ...next, onboarded_at: new Date().toISOString() })
+        .eq("user_id", user.id);
+      try { localStorage.removeItem("pencil:onboarding"); } catch {}
+      navigate("/canvas", { replace: true });
+      return;
+    }
+
+    // Otherwise route to sign-in — answers will be saved post-login
+    navigate("/auth", { replace: true });
+  };
 
   return (
     <div className="min-h-screen w-full flex flex-col bg-background relative overflow-hidden">
