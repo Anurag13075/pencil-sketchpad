@@ -173,7 +173,7 @@ export default function OnboardingPage() {
                     <button
                       key={opt.value}
                       onClick={() => handleSelect(opt.value)}
-                      disabled={submitting}
+                      
                       className={`group flex items-center gap-3 w-full text-left px-5 h-14 rounded-xl border transition-all ${
                         selected
                           ? "border-primary bg-primary/5"
