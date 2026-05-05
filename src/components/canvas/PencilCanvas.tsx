@@ -11,6 +11,7 @@ import { PropertyInspector } from "./PropertyInspector";
 import { AIImageDialog } from "./AIImageDialog";
 import { PromptToDiagramDialog, type DiagramElement } from "./PromptToDiagramDialog";
 import { ExplainDiagramPanel } from "./ExplainDiagramPanel";
+import { IconLibraryDialog } from "./IconLibraryDialog";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -48,6 +49,7 @@ export function PencilCanvas() {
   const [showAIDialog, setShowAIDialog] = useState(false);
   const [showPromptDialog, setShowPromptDialog] = useState(false);
   const [showExplainPanel, setShowExplainPanel] = useState(false);
+  const [showIconLibrary, setShowIconLibrary] = useState(false);
 
   const { user, signOut } = useAuth();
 
