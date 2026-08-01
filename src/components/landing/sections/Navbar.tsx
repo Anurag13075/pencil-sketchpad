@@ -30,30 +30,13 @@ export function Navbar() {
         </div>
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          {user ? (
-            <>
-              <Link
-                to="/canvas"
-                className="h-8 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium flex items-center gap-1.5 hover:opacity-90 transition-all active:scale-[0.97]"
-              >
-                Open Canvas <ArrowRight size={14} />
-              </Link>
-              <button
-                onClick={signOut}
-                title="Sign out"
-                className="w-8 h-8 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition"
-              >
-                <LogOut size={14} />
-              </button>
-            </>
-          ) : (
-            <Link
-              to="/auth"
-              className="h-8 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium flex items-center gap-1.5 hover:opacity-90 transition-all active:scale-[0.97]"
-            >
-              Sign in <ArrowRight size={14} />
-            </Link>
-          )}
+          <Link
+            to="/canvas"
+            className="h-8 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium flex items-center gap-1.5 hover:opacity-90 transition-all active:scale-[0.97]"
+          >
+            Open Canvas <ArrowRight size={14} />
+          </Link>
+
         </div>
       </div>
     </motion.nav>
