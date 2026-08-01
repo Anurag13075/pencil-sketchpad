@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { LogIn, User as UserIcon, LogOut } from "lucide-react";
 import { nanoid } from "nanoid";
 import type { Tool, CanvasElement, HandlePosition, Point, FillStyle, StrokeStyle } from "@/types/canvas";
 import { useCanvasHistory } from "@/hooks/use-canvas-history";
@@ -13,7 +12,6 @@ import { PromptToDiagramDialog, type DiagramElement } from "./PromptToDiagramDia
 import { ExplainDiagramPanel } from "./ExplainDiagramPanel";
 import { IconLibraryDialog } from "./IconLibraryDialog";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { useAuth } from "@/hooks/use-auth";
 
 type Action =
   | { type: "none" }
@@ -25,6 +23,7 @@ type Action =
 export function PencilCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const textInputRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { elements, setElements, commit, undo, redo, canUndo, canRedo } = useCanvasHistory([]);
 
   const [tool, setTool] = useState<Tool>("select");
@@ -51,7 +50,6 @@ export function PencilCanvas() {
   const [showExplainPanel, setShowExplainPanel] = useState(false);
   const [showIconLibrary, setShowIconLibrary] = useState(false);
 
-  const { user, signOut } = useAuth();
 
   const elementsRef = useRef(elements);
   elementsRef.current = elements;
@@ -583,28 +581,6 @@ export function PencilCanvas() {
           <span className="text-xs text-muted-foreground ml-1.5">Draft</span>
         </Link>
         <ThemeToggle className="border bg-background/85 backdrop-blur-xl" />
-        {user ? (
-          <div className="flex items-center gap-1 px-2.5 py-1.5 border rounded-md bg-background/85 backdrop-blur-xl">
-            {user.user_metadata?.avatar_url ? (
-              <img src={user.user_metadata.avatar_url} alt="" className="w-5 h-5 rounded-full" />
-            ) : (
-              <UserIcon size={13} className="text-muted-foreground" />
-            )}
-            <span className="text-xs text-foreground max-w-[120px] truncate">
-              {user.user_metadata?.full_name || user.email}
-            </span>
-            <button onClick={signOut} title="Sign out" className="ml-1 text-muted-foreground hover:text-foreground">
-              <LogOut size={12} />
-            </button>
-          </div>
-        ) : (
-          <Link
-            to="/auth"
-            className="flex items-center gap-1.5 px-3 py-1.5 border rounded-md bg-background/85 backdrop-blur-xl text-xs text-foreground hover:bg-muted transition"
-          >
-            <LogIn size={12} /> Sign in
-          </Link>
-        )}
       </div>
 
       <InstrumentTray
@@ -618,8 +594,33 @@ export function PencilCanvas() {
         onPromptToDiagram={() => setShowPromptDialog(true)}
         onExplainDiagram={() => setShowExplainPanel(true)}
         onIconLibrary={() => setShowIconLibrary(true)}
+        onUploadImage={() => fileInputRef.current?.click()}
         canUndo={canUndo}
         canRedo={canRedo}
+      />
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          e.target.value = "";
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = () => {
+            const dataUrl = String(reader.result);
+            const img = new Image();
+            img.onload = () => {
+              const max = 420;
+              const scale = Math.min(1, max / Math.max(img.width, img.height));
+              insertImage(dataUrl, img.width * scale, img.height * scale);
+            };
+            img.src = dataUrl;
+          };
+          reader.readAsDataURL(file);
+        }}
       />
 
       <PropertyInspector
