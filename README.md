@@ -1,16 +1,8 @@
+
 # Pencil Sketchpad
 
 Create a complete clone of excali draw with exactly same frontend and exactly same functionallties but make it design slightly different and name of it pencil
 
-This project was built with [Lovable](https://lovable.dev).
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/4dbce26b-862b-41e3-88fa-77df43b0a32c).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
 
 ## Development
 
@@ -22,3 +14,28 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+=======
+
+✏️ Pencil Sketchpad
+Pencil Sketchpad is a modern, full-stack browser-based drawing and sketching application built for speed, simplicity and a smooth creative experience.
+Designed from the ground up with a focus on clean UI and real-time functionality, Pencil Sketchpad lets users sketch, draw and express ideas freely — all without leaving the browser.
+
+🚀 Tech Stack
+LayerTechnologyFrontendReact + TypeScriptStylingTailwind CSS + shadcn/uiBackend & AuthSupabaseBuild ToolViteTestingPlaywright + VitestDeploymentVercel
+
+⚡ Key Highlights
+
+🎨 Smooth Canvas Drawing — Fluid, responsive sketchpad experience built natively in the browser
+🔐 Supabase Integration — Backend powered by Supabase for auth and data persistence
+🧩 Component-Driven Architecture — Built with reusable shadcn/ui components for a clean, maintainable codebase
+⚡ Blazing Fast — Powered by Vite and Bun for instant dev and optimized production builds
+🧪 Fully Tested — End-to-end tests with Playwright and unit tests with Vitest
+📱 Responsive Design — Works seamlessly across all screen sizes
+
+
+🌐 Live Demo
+👉 pencil-sketchpad.vercel.app
+
+
+Built with passion by Anurag Sharma 🚀
+
