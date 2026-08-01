@@ -86,7 +86,7 @@ export function AIFeature() {
             </div>
 
             <Link
-              to="/onboarding"
+              to="/canvas"
               className="inline-flex h-11 px-6 rounded-xl bg-primary text-primary-foreground text-sm font-medium items-center gap-2 hover:opacity-90 transition-all active:scale-[0.97] shadow-lg shadow-primary/20"
             >
               Try AI Generation <Sparkles size={15} />

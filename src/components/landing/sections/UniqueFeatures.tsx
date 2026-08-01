@@ -76,7 +76,7 @@ export function UniqueFeatures() {
                   ))}
                 </ul>
                 <Link
-                  to="/onboarding"
+                  to="/canvas"
                   className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:gap-2 transition-all"
                 >
                   Try it now <ArrowRight size={13} />

@@ -37,7 +37,7 @@ export function CTASection() {
           No sign-up. No download. No limits. Just open the canvas, pick a tool, and start creating.
         </p>
         <Link
-          to="/onboarding"
+          to="/canvas"
           className="inline-flex h-14 px-10 rounded-2xl bg-primary text-primary-foreground text-base font-medium items-center gap-2 hover:opacity-90 transition-all active:scale-[0.97] shadow-xl shadow-primary/25"
         >
           Open Pencil <ArrowRight size={18} />
