@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import {
   MousePointer2, Square, Circle, Diamond, Minus, MoveRight,
   Pencil, Type, Eraser, Undo2, Redo2, Download, Trash2, Sparkles,
-  Wand2, BookOpen, Shapes
+  Wand2, BookOpen, Shapes, ImagePlus
 } from "lucide-react";
 import type { Tool } from "@/types/canvas";
 
@@ -18,6 +18,7 @@ interface InstrumentTrayProps {
   onPromptToDiagram: () => void;
   onExplainDiagram: () => void;
   onIconLibrary: () => void;
+  onUploadImage: () => void;
   canUndo: boolean;
   canRedo: boolean;
 }
@@ -45,6 +46,7 @@ export function InstrumentTray({
   onPromptToDiagram,
   onExplainDiagram,
   onIconLibrary,
+  onUploadImage,
   canUndo,
   canRedo,
 }: InstrumentTrayProps) {
@@ -74,6 +76,13 @@ export function InstrumentTray({
         title="Icon library — insert any icon"
       >
         <Shapes size={18} strokeWidth={1.5} />
+      </button>
+      <button
+        className="tool-btn"
+        onClick={onUploadImage}
+        title="Upload image from your computer"
+      >
+        <ImagePlus size={18} strokeWidth={1.5} />
       </button>
 
       <div className="w-px h-6 bg-border mx-1" />

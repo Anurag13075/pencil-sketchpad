@@ -498,6 +498,8 @@ export function PencilCanvas() {
     setTool("select");
   }, [panOffset, zoom, cursorPos, strokeColor, fillColor, fillStyle, strokeWidth, strokeStyle, opacity, setElements, commit]);
 
+  const insertImage = handleAIImageGenerated;
+
   const handleDiagramGenerated = useCallback((diagramElements: DiagramElement[]) => {
     const canvas = canvasRef.current;
     const rect = canvas?.getBoundingClientRect();
