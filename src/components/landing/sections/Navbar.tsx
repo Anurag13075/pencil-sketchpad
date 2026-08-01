@@ -1,13 +1,12 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowRight, Pencil as PencilIcon, LogOut } from "lucide-react";
+import { ArrowRight, Pencil as PencilIcon } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { useAuth } from "@/hooks/use-auth";
 
 const spring = { type: "spring" as const, stiffness: 400, damping: 30 };
 
 export function Navbar() {
-  const { user, signOut } = useAuth();
+
 
   return (
     <motion.nav
