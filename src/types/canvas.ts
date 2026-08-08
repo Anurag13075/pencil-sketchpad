@@ -44,6 +44,12 @@ export interface CanvasElement {
   isDeleted?: boolean;
   imageData?: string;
   imageLoaded?: boolean;
+  /** Smart connector bindings: ids of the shapes this connector is glued to. */
+  startBinding?: string;
+  endBinding?: string;
+  /** Architectural role, set by the code-to-diagram engine. */
+  kind?: string;
+
 }
 
 export type HandlePosition =
