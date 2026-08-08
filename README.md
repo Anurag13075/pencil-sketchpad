@@ -1,4 +1,4 @@
-# ✏️ Pencil — The Infinite Canvas, Rebuilt for Engineers
+# ✏️ Pencil — The Infinite Canvas, built for Engineers
 
 ![Pencil](./pencil.png)
 
