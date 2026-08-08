@@ -1,5 +1,7 @@
 # ✏️ Pencil — The Infinite Canvas, Rebuilt for Engineers
 
+![Pencil](./pencil.png)
+
 **Pencil** is a full-stack, real-time collaborative whiteboard built for people who think in systems — architecture diagrams, technical sketches, and visual thought. It combines a hand-built infinite-canvas drawing engine with three AI-native workflows that turn drawings into code and code into drawings.
 
 Built with a technical drafting aesthetic: 0.5px grid lines, a bottom-docked instrument tray, mechanical button presses, and Drafting Blue accents.
@@ -174,6 +176,8 @@ flowchart TD
 ---
 
 ## System Architecture
+
+![Architecture Diagram](./diagram.png)
 
 ```mermaid
 flowchart TB
