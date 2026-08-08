@@ -14,6 +14,115 @@ export type Database = {
   }
   public: {
     Tables: {
+      board_embeddings: {
+        Row: {
+          board_id: string
+          content: string
+          created_at: string
+          embedding: string | null
+          id: string
+          summary: string | null
+        }
+        Insert: {
+          board_id: string
+          content: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          summary?: string | null
+        }
+        Update: {
+          board_id?: string
+          content?: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          summary?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_embeddings_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      board_snapshots: {
+        Row: {
+          board_id: string
+          created_at: string
+          element_count: number
+          elements: Json
+          id: string
+          label: string
+        }
+        Insert: {
+          board_id: string
+          created_at?: string
+          element_count?: number
+          elements?: Json
+          id?: string
+          label?: string
+        }
+        Update: {
+          board_id?: string
+          created_at?: string
+          element_count?: number
+          elements?: Json
+          id?: string
+          label?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_snapshots_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      boards: {
+        Row: {
+          app_state: Json
+          created_at: string
+          elements: Json
+          id: string
+          is_public: boolean
+          owner_key: string | null
+          slug: string
+          thumbnail_path: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          app_state?: Json
+          created_at?: string
+          elements?: Json
+          id?: string
+          is_public?: boolean
+          owner_key?: string | null
+          slug?: string
+          thumbnail_path?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          app_state?: Json
+          created_at?: string
+          elements?: Json
+          id?: string
+          is_public?: boolean
+          owner_key?: string | null
+          slug?: string
+          thumbnail_path?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           account_type: string | null
@@ -67,7 +176,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      match_boards: {
+        Args: { match_count?: number; query_embedding: string }
+        Returns: {
+          board_id: string
+          similarity: number
+          slug: string
+          summary: string
+          title: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
