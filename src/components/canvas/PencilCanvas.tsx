@@ -1,12 +1,17 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { nanoid } from "nanoid";
 import type { Tool, CanvasElement, HandlePosition, Point, FillStyle, StrokeStyle } from "@/types/canvas";
 import { useCanvasHistory } from "@/hooks/use-canvas-history";
-import { createElement, drawElement, hitTest, getHandleAtPoint, resizeElement, getElementBounds } from "@/lib/canvas-utils";
+import { createElement, drawElement, hitTest, getHandleAtPoint, resizeElement, getElementBounds, setImageLoadListener } from "@/lib/canvas-utils";
 import { InstrumentTray } from "./InstrumentTray";
 import { StatusBar } from "./StatusBar";
 import { PropertyInspector } from "./PropertyInspector";
 import { AIImageDialog } from "./AIImageDialog";
+import { PromptToDiagramDialog, type DiagramElement } from "./PromptToDiagramDialog";
+import { ExplainDiagramPanel } from "./ExplainDiagramPanel";
+import { IconLibraryDialog } from "./IconLibraryDialog";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 type Action =
   | { type: "none" }
@@ -18,6 +23,7 @@ type Action =
 export function PencilCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const textInputRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { elements, setElements, commit, undo, redo, canUndo, canRedo } = useCanvasHistory([]);
 
   const [tool, setTool] = useState<Tool>("select");
@@ -25,7 +31,7 @@ export function PencilCanvas() {
   const [panOffset, setPanOffset] = useState<Point>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [cursorPos, setCursorPos] = useState<Point>({ x: 0, y: 0 });
-  const [gridEnabled, setGridEnabled] = useState(true);
+  const [gridEnabled, setGridEnabled] = useState(false);
   const [action, setAction] = useState<Action>({ type: "none" });
 
   // Style state
@@ -40,6 +46,10 @@ export function PencilCanvas() {
   const [editingText, setEditingText] = useState<{ id: string; x: number; y: number } | null>(null);
   const [textValue, setTextValue] = useState("");
   const [showAIDialog, setShowAIDialog] = useState(false);
+  const [showPromptDialog, setShowPromptDialog] = useState(false);
+  const [showExplainPanel, setShowExplainPanel] = useState(false);
+  const [showIconLibrary, setShowIconLibrary] = useState(false);
+
 
   const elementsRef = useRef(elements);
   elementsRef.current = elements;
@@ -110,6 +120,14 @@ export function PencilCanvas() {
     });
     observer.observe(canvas);
     return () => observer.disconnect();
+  }, [setElements]);
+
+  // Re-render when AI images finish loading
+  useEffect(() => {
+    setImageLoadListener(() => {
+      setElements((prev) => [...prev]);
+    });
+    return () => setImageLoadListener(() => {});
   }, [setElements]);
 
   // Mouse handlers
@@ -461,8 +479,13 @@ export function PencilCanvas() {
   }, [updateSelectedStyles]);
 
   const handleAIImageGenerated = useCallback((imageData: string, width: number, height: number) => {
+    const canvas = canvasRef.current;
+    const rect = canvas?.getBoundingClientRect();
+    // Center of viewport in canvas coords
+    const cx = rect ? (rect.width / 2 - panOffset.x) / zoom : cursorPos.x;
+    const cy = rect ? (rect.height / 2 - panOffset.y) / zoom : cursorPos.y;
     const id = nanoid();
-    const el = createElement(id, "ai-image" as Tool, cursorPos.x - width / 2, cursorPos.y - height / 2, strokeColor, fillColor, fillStyle, strokeWidth, strokeStyle, opacity, 0);
+    const el = createElement(id, "ai-image" as Tool, cx - width / 2, cy - height / 2, strokeColor, fillColor, fillStyle, strokeWidth, strokeStyle, opacity, 0);
     el.width = width;
     el.height = height;
     el.imageData = imageData;
@@ -473,7 +496,36 @@ export function PencilCanvas() {
     setSelectedIds(new Set([id]));
     setShowAIDialog(false);
     setTool("select");
-  }, [cursorPos, strokeColor, fillColor, fillStyle, strokeWidth, strokeStyle, opacity, setElements, commit]);
+  }, [panOffset, zoom, cursorPos, strokeColor, fillColor, fillStyle, strokeWidth, strokeStyle, opacity, setElements, commit]);
+
+  const insertImage = handleAIImageGenerated;
+
+  const handleDiagramGenerated = useCallback((diagramElements: DiagramElement[]) => {
+    const canvas = canvasRef.current;
+    const rect = canvas?.getBoundingClientRect();
+    // Center the diagram (1000x600 canonical) in viewport
+    const vx = rect ? (rect.width / 2 - panOffset.x) / zoom : 0;
+    const vy = rect ? (rect.height / 2 - panOffset.y) / zoom : 0;
+    const offsetX = vx - 500;
+    const offsetY = vy - 300;
+
+    const newOnes: CanvasElement[] = diagramElements.map((d) => {
+      const id = nanoid();
+      const stroke = d.strokeColor || "#1e1e1e";
+      const fill = d.fillColor || "transparent";
+      const fillStyleVal: FillStyle = fill !== "transparent" ? "solid" : "none";
+      const el = createElement(id, d.type as Tool, d.x + offsetX, d.y + offsetY, stroke, fill, fillStyleVal, 2, "solid", 1, 0);
+      el.width = d.width;
+      el.height = d.height;
+      if (d.text) el.text = d.text;
+      return el;
+    });
+    const merged = [...elementsRef.current, ...newOnes];
+    setElements(merged);
+    commit(merged);
+    setSelectedIds(new Set(newOnes.map((e) => e.id)));
+    setShowPromptDialog(false);
+  }, [panOffset, zoom, setElements, commit]);
 
   const getCursor = () => {
     if (tool === "select") return action.type === "panning" ? "grabbing" : "default";
@@ -524,12 +576,13 @@ export function PencilCanvas() {
         />
       )}
 
-      {/* Title */}
+      {/* Title + auth chip */}
       <div className="fixed top-3 left-3 z-50 flex items-center gap-2">
-        <div className="px-3 py-1.5 border rounded-md bg-background/85 backdrop-blur-xl">
+        <Link to="/" className="px-3 py-1.5 border rounded-md bg-background/85 backdrop-blur-xl hover:bg-muted transition">
           <span className="text-sm font-semibold tracking-tight text-foreground">Pencil</span>
           <span className="text-xs text-muted-foreground ml-1.5">Draft</span>
-        </div>
+        </Link>
+        <ThemeToggle className="border bg-background/85 backdrop-blur-xl" />
       </div>
 
       <InstrumentTray
@@ -539,8 +592,37 @@ export function PencilCanvas() {
         onRedo={redo}
         onClear={handleClear}
         onExport={exportCanvas}
+        onAIImage={() => setShowAIDialog(true)}
+        onPromptToDiagram={() => setShowPromptDialog(true)}
+        onExplainDiagram={() => setShowExplainPanel(true)}
+        onIconLibrary={() => setShowIconLibrary(true)}
+        onUploadImage={() => fileInputRef.current?.click()}
         canUndo={canUndo}
         canRedo={canRedo}
+      />
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          e.target.value = "";
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = () => {
+            const dataUrl = String(reader.result);
+            const img = new Image();
+            img.onload = () => {
+              const max = 420;
+              const scale = Math.min(1, max / Math.max(img.width, img.height));
+              insertImage(dataUrl, img.width * scale, img.height * scale);
+            };
+            img.src = dataUrl;
+          };
+          reader.readAsDataURL(file);
+        }}
       />
 
       <PropertyInspector
@@ -570,8 +652,44 @@ export function PencilCanvas() {
 
       <AIImageDialog
         visible={showAIDialog}
-        onClose={() => { setShowAIDialog(false); setTool("select"); }}
+        onClose={() => { setShowAIDialog(false); if (tool === "ai-image") setTool("select"); }}
         onImageGenerated={handleAIImageGenerated}
+      />
+
+      <PromptToDiagramDialog
+        visible={showPromptDialog}
+        onClose={() => setShowPromptDialog(false)}
+        onDiagramGenerated={handleDiagramGenerated}
+      />
+
+      <ExplainDiagramPanel
+        visible={showExplainPanel}
+        onClose={() => setShowExplainPanel(false)}
+        elements={elements}
+      />
+
+      <IconLibraryDialog
+        visible={showIconLibrary}
+        onClose={() => setShowIconLibrary(false)}
+        onSelect={(dataUrl) => {
+          const canvas = canvasRef.current;
+          const rect = canvas?.getBoundingClientRect();
+          const size = 80;
+          const cx = rect ? (rect.width / 2 - panOffset.x) / zoom : 0;
+          const cy = rect ? (rect.height / 2 - panOffset.y) / zoom : 0;
+          const id = nanoid();
+          const el = createElement(id, "ai-image" as Tool, cx - size / 2, cy - size / 2, strokeColor, fillColor, fillStyle, strokeWidth, strokeStyle, opacity, 0);
+          el.width = size;
+          el.height = size;
+          el.imageData = dataUrl;
+          el.imageLoaded = true;
+          const newElements = [...elementsRef.current, el];
+          setElements(newElements);
+          commit(newElements);
+          setSelectedIds(new Set([id]));
+          setShowIconLibrary(false);
+          setTool("select");
+        }}
       />
     </div>
   );
@@ -586,8 +704,14 @@ function drawGrid(ctx: CanvasRenderingContext2D, w: number, h: number, pan: Poin
   const minorStartX = pan.x % minorSize;
   const minorStartY = pan.y % minorSize;
 
+  const style = getComputedStyle(document.documentElement);
+  const gridColor = style.getPropertyValue("--grid-major").trim() || "210 10% 10%";
+  const isDark = document.documentElement.classList.contains("dark");
+  const minorAlpha = isDark ? 0.05 : 0.025;
+  const majorAlpha = isDark ? 0.09 : 0.05;
+
   // Minor grid
-  ctx.strokeStyle = "hsla(210, 10%, 10%, 0.03)";
+  ctx.strokeStyle = `hsla(${gridColor}, ${minorAlpha})`;
   ctx.lineWidth = 0.5;
   ctx.beginPath();
   for (let x = minorStartX; x < w; x += minorSize) {
@@ -601,7 +725,7 @@ function drawGrid(ctx: CanvasRenderingContext2D, w: number, h: number, pan: Poin
   ctx.stroke();
 
   // Major grid
-  ctx.strokeStyle = "hsla(210, 10%, 10%, 0.06)";
+  ctx.strokeStyle = `hsla(${gridColor}, ${majorAlpha})`;
   ctx.lineWidth = 0.5;
   ctx.beginPath();
   for (let x = startX; x < w; x += majorSize) {

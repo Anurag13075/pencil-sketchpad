@@ -1,4 +1,21 @@
 
+# Pencil Sketchpad
+
+Create a complete clone of excali draw with exactly same frontend and exactly same functionallties but make it design slightly different and name of it pencil
+
+
+## Development
+
+Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+
+```sh
+git clone <this-repository-url>
+cd <repository-name>
+npm i
+npm run dev
+```
+=======
+
 ✏️ Pencil Sketchpad
 Pencil Sketchpad is a modern, full-stack browser-based drawing and sketching application built for speed, simplicity and a smooth creative experience.
 Designed from the ground up with a focus on clean UI and real-time functionality, Pencil Sketchpad lets users sketch, draw and express ideas freely — all without leaving the browser.

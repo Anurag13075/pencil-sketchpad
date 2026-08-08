@@ -2,3 +2,9 @@ project_id = "nbugxtqfzmdocqsrzyda"
 
 [functions.generate-image]
 verify_jwt = false
+
+[functions.generate-diagram]
+verify_jwt = false
+
+[functions.explain-diagram]
+verify_jwt = false

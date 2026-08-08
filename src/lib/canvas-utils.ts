@@ -291,10 +291,14 @@ function drawText(ctx: CanvasRenderingContext2D, el: CanvasElement) {
 
 // Image cache for AI-generated images
 const imageCache = new Map<string, HTMLImageElement>();
+let imageLoadListener: (() => void) | null = null;
+
+export function setImageLoadListener(cb: () => void) {
+  imageLoadListener = cb;
+}
 
 function drawImage(ctx: CanvasRenderingContext2D, el: CanvasElement, b: { x: number; y: number; w: number; h: number }) {
   if (!el.imageData) {
-    // Draw placeholder
     ctx.fillStyle = "hsl(210, 10%, 92%)";
     ctx.fillRect(b.x, b.y, b.w || 200, b.h || 200);
     ctx.fillStyle = "hsl(210, 10%, 50%)";
@@ -306,16 +310,20 @@ function drawImage(ctx: CanvasRenderingContext2D, el: CanvasElement, b: { x: num
     return;
   }
 
-  let img = imageCache.get(el.id);
+  let img = imageCache.get(el.imageData);
   if (!img) {
     img = new Image();
-    img.src = el.imageData;
-    imageCache.set(el.id, img);
+    img.crossOrigin = "anonymous";
+    imageCache.set(el.imageData, img);
     img.onload = () => {
-      // Image loaded - next render will draw it
+      if (imageLoadListener) imageLoadListener();
     };
+    img.onerror = () => {
+      console.error("Image failed to load");
+    };
+    img.src = el.imageData;
   }
-  
+
   if (img.complete && img.naturalWidth > 0) {
     ctx.drawImage(img, b.x, b.y, b.w || img.naturalWidth, b.h || img.naturalHeight);
   } else {

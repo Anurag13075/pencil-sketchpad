@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight, Grid3X3, Layers, Sparkles } from "lucide-react";
-import heroImage from "@/assets/landing-hero-new.png";
+import heroImage from "@/assets/landing-hero-product.png";
 
 const spring = { type: "spring" as const, stiffness: 400, damping: 30 };
 
