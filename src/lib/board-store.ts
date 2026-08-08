@@ -63,9 +63,10 @@ export async function loadBoard(slug: string) {
 }
 
 export async function saveBoard(id: string, elements: CanvasElement[], title?: string) {
-  const patch: Record<string, unknown> = { elements: elements as any };
-  if (title !== undefined) patch.title = title;
-  const { error } = await supabase.from("boards").update(patch).eq("id", id);
+  const { error } = await supabase
+    .from("boards")
+    .update({ elements: elements as any, ...(title !== undefined ? { title } : {}) })
+    .eq("id", id);
   if (error) throw error;
 }
 
