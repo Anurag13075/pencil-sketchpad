@@ -8,3 +8,15 @@ verify_jwt = false
 
 [functions.explain-diagram]
 verify_jwt = false
+
+[functions.code-to-diagram]
+verify_jwt = false
+
+[functions.diagram-to-code]
+verify_jwt = false
+
+[functions.index-board]
+verify_jwt = false
+
+[functions.search-boards]
+verify_jwt = false
