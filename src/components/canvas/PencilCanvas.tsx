@@ -98,7 +98,94 @@ export function PencilCanvas() {
     [panOffset, zoom]
   );
 
-  // Render loop
+  /* ----------------------- realtime collaboration ----------------------- */
+  const applyRemote = useCallback(
+    (remote: CanvasElement[]) => {
+      setElements(remote);
+    },
+    [setElements],
+  );
+
+  const { identity, peers, connected, sendCursor, broadcastElements } = useRealtimeBoard({
+    slug,
+    enabled: !!slug,
+    onRemoteElements: applyRemote,
+    getElements: () => elementsRef.current,
+  });
+
+  /* --------------------------- cloud persistence -------------------------- */
+  const bootRef = useRef(false);
+  useEffect(() => {
+    if (bootRef.current) return;
+    bootRef.current = true;
+    (async () => {
+      const params = new URLSearchParams(window.location.search);
+      const wanted = params.get("board");
+      try {
+        if (wanted) {
+          const board = await loadBoard(wanted);
+          if (board) {
+            setBoardId(board.id);
+            setSlug(board.slug);
+            setTitle(board.title);
+            setElements(board.elements);
+            commit(board.elements);
+            return;
+          }
+        }
+        const created = await createBoard();
+        setBoardId(created.id);
+        setSlug(created.slug);
+        setTitle(created.title);
+        const url = new URL(window.location.href);
+        url.searchParams.set("board", created.slug);
+        window.history.replaceState({}, "", url);
+      } catch {
+        /* offline / blocked — canvas still works locally */
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const lastSnapshotAt = useRef(0);
+  const lastSavedJson = useRef("");
+  useEffect(() => {
+    if (!boardId) return;
+    const json = JSON.stringify(elements);
+    if (json === lastSavedJson.current) return;
+    const t = setTimeout(async () => {
+      lastSavedJson.current = json;
+      setSaveState("saving");
+      try {
+        await saveBoard(boardId, elements, title);
+        setSaveState("saved");
+        if (Date.now() - lastSnapshotAt.current > 60_000 && elements.some((e) => !e.isDeleted)) {
+          lastSnapshotAt.current = Date.now();
+          createSnapshot(boardId, elements, "Autosave").catch(() => {});
+          uploadThumbnail(boardId, elements).catch(() => {});
+          indexBoard(boardId, title, elements).catch(() => {});
+        }
+      } catch {
+        setSaveState("idle");
+      }
+    }, 900);
+    return () => clearTimeout(t);
+  }, [elements, boardId, title]);
+
+  // push local changes to peers
+  useEffect(() => {
+    if (!connected) return;
+    const t = setTimeout(() => broadcastElements(elementsRef.current), 90);
+    return () => clearTimeout(t);
+  }, [elements, connected, broadcastElements]);
+
+  const runAutoLayout = useCallback(() => {
+    const next = autoLayout(elementsRef.current, { direction: "horizontal" });
+    setElements(next);
+    commit(next);
+  }, [setElements, commit]);
+
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
