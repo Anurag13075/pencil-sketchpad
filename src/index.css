@@ -126,10 +126,11 @@
   }
 
   .instrument-tray {
-    @apply fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-0.5 p-1
-           backdrop-blur-xl border rounded-lg;
+    @apply fixed bottom-6 left-1/2 -translate-x-1/2 flex flex-wrap items-center justify-center gap-0.5 p-1
+           backdrop-blur-xl border rounded-lg max-w-[95vw];
     background: hsla(var(--panel-bg) / 0.85);
   }
+
 
   .tool-btn {
     @apply w-9 h-9 flex items-center justify-center rounded-md transition-all duration-150 cursor-pointer;

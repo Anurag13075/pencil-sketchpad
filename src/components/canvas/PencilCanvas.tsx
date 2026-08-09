@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { nanoid } from "nanoid";
 import type { Tool, CanvasElement, HandlePosition, Point, FillStyle, StrokeStyle } from "@/types/canvas";
@@ -11,7 +11,23 @@ import { AIImageDialog } from "./AIImageDialog";
 import { PromptToDiagramDialog, type DiagramElement } from "./PromptToDiagramDialog";
 import { ExplainDiagramPanel } from "./ExplainDiagramPanel";
 import { IconLibraryDialog } from "./IconLibraryDialog";
+import { CodeToDiagramDialog } from "./CodeToDiagramDialog";
+import { DiagramToCodePanel } from "./DiagramToCodePanel";
+import { VersionHistoryPanel } from "./VersionHistoryPanel";
+import { BoardSearchDialog } from "./BoardSearchDialog";
+import { PresenceLayer } from "./PresenceLayer";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useRealtimeBoard } from "@/hooks/use-realtime-board";
+import { autoLayout, computeSnap, inferBindings, reflowConnectors, type SnapResult } from "@/lib/auto-layout";
+import {
+  createBoard,
+  createSnapshot,
+  indexBoard,
+  loadBoard,
+  saveBoard,
+  uploadThumbnail,
+} from "@/lib/board-store";
+
 
 type Action =
   | { type: "none" }
@@ -49,10 +65,22 @@ export function PencilCanvas() {
   const [showPromptDialog, setShowPromptDialog] = useState(false);
   const [showExplainPanel, setShowExplainPanel] = useState(false);
   const [showIconLibrary, setShowIconLibrary] = useState(false);
+  const [showCodeDialog, setShowCodeDialog] = useState(false);
+  const [showCodePanel, setShowCodePanel] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
 
+  // Cloud board
+  const [boardId, setBoardId] = useState<string | null>(null);
+  const [slug, setSlug] = useState<string | null>(null);
+  const [title, setTitle] = useState("Untitled board");
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
+  const [previewElements, setPreviewElements] = useState<CanvasElement[] | null>(null);
+  const [guides, setGuides] = useState<SnapResult["guides"]>([]);
 
   const elementsRef = useRef(elements);
   elementsRef.current = elements;
+
 
   const screenToCanvas = useCallback(
     (sx: number, sy: number): Point => ({
@@ -70,7 +98,94 @@ export function PencilCanvas() {
     [panOffset, zoom]
   );
 
-  // Render loop
+  /* ----------------------- realtime collaboration ----------------------- */
+  const applyRemote = useCallback(
+    (remote: CanvasElement[]) => {
+      setElements(remote);
+    },
+    [setElements],
+  );
+
+  const { identity, peers, connected, sendCursor, broadcastElements } = useRealtimeBoard({
+    slug,
+    enabled: !!slug,
+    onRemoteElements: applyRemote,
+    getElements: () => elementsRef.current,
+  });
+
+  /* --------------------------- cloud persistence -------------------------- */
+  const bootRef = useRef(false);
+  useEffect(() => {
+    if (bootRef.current) return;
+    bootRef.current = true;
+    (async () => {
+      const params = new URLSearchParams(window.location.search);
+      const wanted = params.get("board");
+      try {
+        if (wanted) {
+          const board = await loadBoard(wanted);
+          if (board) {
+            setBoardId(board.id);
+            setSlug(board.slug);
+            setTitle(board.title);
+            setElements(board.elements);
+            commit(board.elements);
+            return;
+          }
+        }
+        const created = await createBoard();
+        setBoardId(created.id);
+        setSlug(created.slug);
+        setTitle(created.title);
+        const url = new URL(window.location.href);
+        url.searchParams.set("board", created.slug);
+        window.history.replaceState({}, "", url);
+      } catch {
+        /* offline / blocked — canvas still works locally */
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const lastSnapshotAt = useRef(0);
+  const lastSavedJson = useRef("");
+  useEffect(() => {
+    if (!boardId) return;
+    const json = JSON.stringify(elements);
+    if (json === lastSavedJson.current) return;
+    const t = setTimeout(async () => {
+      lastSavedJson.current = json;
+      setSaveState("saving");
+      try {
+        await saveBoard(boardId, elements, title);
+        setSaveState("saved");
+        if (Date.now() - lastSnapshotAt.current > 60_000 && elements.some((e) => !e.isDeleted)) {
+          lastSnapshotAt.current = Date.now();
+          createSnapshot(boardId, elements, "Autosave").catch(() => {});
+          uploadThumbnail(boardId, elements).catch(() => {});
+          indexBoard(boardId, title, elements).catch(() => {});
+        }
+      } catch {
+        setSaveState("idle");
+      }
+    }, 900);
+    return () => clearTimeout(t);
+  }, [elements, boardId, title]);
+
+  // push local changes to peers
+  useEffect(() => {
+    if (!connected) return;
+    const t = setTimeout(() => broadcastElements(elementsRef.current), 90);
+    return () => clearTimeout(t);
+  }, [elements, connected, broadcastElements]);
+
+  const runAutoLayout = useCallback(() => {
+    const next = autoLayout(elementsRef.current, { direction: "horizontal" });
+    setElements(next);
+    commit(next);
+  }, [setElements, commit]);
+
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -102,14 +217,36 @@ export function PencilCanvas() {
     ctx.translate(panOffset.x, panOffset.y);
     ctx.scale(zoom, zoom);
 
-    // Draw elements
-    const visibleElements = elements.filter((e) => !e.isDeleted);
+    // Draw elements (a version-history preview overrides the live scene)
+    const source = previewElements ?? elements;
+    const visibleElements = source.filter((e) => !e.isDeleted);
     for (const el of visibleElements) {
-      drawElement(ctx, el, selectedIds.has(el.id), zoom);
+      drawElement(ctx, el, !previewElements && selectedIds.has(el.id), zoom);
+    }
+
+    // Alignment guides
+    if (guides.length > 0) {
+      ctx.save();
+      ctx.strokeStyle = "#ec4899";
+      ctx.lineWidth = 1 / zoom;
+      ctx.setLineDash([4 / zoom, 4 / zoom]);
+      for (const g of guides) {
+        ctx.beginPath();
+        if (g.orientation === "v") {
+          ctx.moveTo(g.at, g.from - 20);
+          ctx.lineTo(g.at, g.to + 20);
+        } else {
+          ctx.moveTo(g.from - 20, g.at);
+          ctx.lineTo(g.to + 20, g.at);
+        }
+        ctx.stroke();
+      }
+      ctx.restore();
     }
 
     ctx.restore();
-  }, [elements, selectedIds, panOffset, zoom, gridEnabled]);
+  }, [elements, selectedIds, panOffset, zoom, gridEnabled, previewElements, guides]);
+
 
   // Resize observer
   useEffect(() => {
@@ -221,6 +358,7 @@ export function PencilCanvas() {
       const sy = e.clientY - rect.top;
       const { x: cx, y: cy } = screenToCanvas(sx, sy);
       setCursorPos({ x: cx, y: cy });
+      sendCursor({ x: cx, y: cy }, [...selectedIds]);
 
       if (action.type === "panning") {
         const dx = e.clientX - action.startX;
@@ -245,13 +383,21 @@ export function PencilCanvas() {
       if (action.type === "moving") {
         const dx = cx - action.startX;
         const dy = cy - action.startY;
-        setElements((prev) =>
-          prev.map((el) => {
-            const orig = action.originals.get(el.id);
-            if (!orig) return el;
-            return { ...el, x: orig.x + dx, y: orig.y + dy };
-          })
+        // provisional move, then Figma-style alignment snapping on the selection
+        const dragged = elementsRef.current.map((el) => {
+          const orig = action.originals.get(el.id);
+          return orig ? { ...el, x: orig.x + dx, y: orig.y + dy } : el;
+        });
+        const movingEls = dragged.filter((el) => action.originals.has(el.id));
+        const otherEls = dragged.filter((el) => !action.originals.has(el.id));
+        const snap = e.altKey
+          ? { dx: 0, dy: 0, guides: [] as SnapResult["guides"] }
+          : computeSnap(movingEls, otherEls);
+        setGuides(snap.guides);
+        const snapped = dragged.map((el) =>
+          action.originals.has(el.id) ? { ...el, x: el.x + snap.dx, y: el.y + snap.dy } : el,
         );
+        setElements(reflowConnectors(snapped));
         return;
       }
 
@@ -260,7 +406,7 @@ export function PencilCanvas() {
         const dy = cy - action.startY;
         const updates = resizeElement(action.original, action.handle, dx, dy);
         setElements((prev) =>
-          prev.map((el) => (el.id === action.elementId ? { ...el, ...updates } : el))
+          reflowConnectors(prev.map((el) => (el.id === action.elementId ? { ...el, ...updates } : el))),
         );
         return;
       }
@@ -272,13 +418,18 @@ export function PencilCanvas() {
         }
       }
     },
-    [action, screenToCanvas, setElements, tool]
+    [action, screenToCanvas, setElements, tool, sendCursor, selectedIds]
   );
+
 
   const handlePointerUp = useCallback(() => {
     if (action.type === "drawing" || action.type === "moving" || action.type === "resizing") {
-      commit(elementsRef.current);
+      // glue freshly drawn connectors to the shapes they touch, then settle geometry
+      const settled = reflowConnectors(inferBindings(elementsRef.current));
+      setElements(settled);
+      commit(settled);
     }
+    setGuides([]);
     if (action.type === "drawing") {
       // If creating a shape, switch back to select
       if (tool !== "freedraw") {
@@ -286,7 +437,8 @@ export function PencilCanvas() {
       }
     }
     setAction({ type: "none" });
-  }, [action, commit, tool]);
+  }, [action, commit, tool, setElements]);
+
 
   // Zoom with wheel
   const handleWheel = useCallback(
@@ -337,6 +489,17 @@ export function PencilCanvas() {
         exportCanvas();
         return;
       }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setShowSearch(true);
+        return;
+      }
+      if (e.shiftKey && e.key.toLowerCase() === "l") {
+        e.preventDefault();
+        runAutoLayout();
+        return;
+      }
+
       if (e.key === "Delete" || e.key === "Backspace") {
         if (selectedIds.size > 0) {
           setElements((prev) =>
@@ -369,7 +532,7 @@ export function PencilCanvas() {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [selectedIds, editingText, undo, redo, setElements, commit, elements]);
+  }, [selectedIds, editingText, undo, redo, setElements, commit, elements, runAutoLayout]);
 
   const exportCanvas = useCallback(() => {
     const visibleElements = elementsRef.current.filter((e) => !e.isDeleted);
@@ -576,12 +739,21 @@ export function PencilCanvas() {
         />
       )}
 
-      {/* Title + auth chip */}
+      {/* Title + save state */}
       <div className="fixed top-3 left-3 z-50 flex items-center gap-2">
         <Link to="/" className="px-3 py-1.5 border rounded-md bg-background/85 backdrop-blur-xl hover:bg-muted transition">
           <span className="text-sm font-semibold tracking-tight text-foreground">Pencil</span>
           <span className="text-xs text-muted-foreground ml-1.5">Draft</span>
         </Link>
+        <input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="px-2 py-1.5 w-44 text-sm border rounded-md bg-background/85 backdrop-blur-xl outline-none focus:ring-1 ring-primary text-foreground"
+          aria-label="Board title"
+        />
+        <span className="text-[11px] font-mono text-muted-foreground px-2 py-1 border rounded-md bg-background/85 backdrop-blur-xl">
+          {saveState === "saving" ? "Saving…" : saveState === "saved" ? "Saved to cloud" : "Local"}
+        </span>
         <ThemeToggle className="border bg-background/85 backdrop-blur-xl" />
       </div>
 
@@ -597,9 +769,15 @@ export function PencilCanvas() {
         onExplainDiagram={() => setShowExplainPanel(true)}
         onIconLibrary={() => setShowIconLibrary(true)}
         onUploadImage={() => fileInputRef.current?.click()}
+        onCodeToDiagram={() => setShowCodeDialog(true)}
+        onDiagramToCode={() => setShowCodePanel(true)}
+        onSearchBoards={() => setShowSearch(true)}
+        onHistory={() => setShowHistory(true)}
+        onAutoLayout={runAutoLayout}
         canUndo={canUndo}
         canRedo={canRedo}
       />
+
 
       <input
         ref={fileInputRef}
@@ -691,7 +869,71 @@ export function PencilCanvas() {
           setTool("select");
         }}
       />
+
+      <CodeToDiagramDialog
+        visible={showCodeDialog}
+        onClose={() => setShowCodeDialog(false)}
+        onInsert={(els, generatedTitle) => {
+          const canvas = canvasRef.current;
+          const rect = canvas?.getBoundingClientRect();
+          const vx = rect ? (rect.width / 2 - panOffset.x) / zoom : 0;
+          const vy = rect ? (rect.height / 2 - panOffset.y) / zoom : 0;
+          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+          for (const el of els) {
+            minX = Math.min(minX, el.x);
+            minY = Math.min(minY, el.y);
+            maxX = Math.max(maxX, el.x + el.width);
+            maxY = Math.max(maxY, el.y + el.height);
+          }
+          const ox = vx - (minX + maxX) / 2;
+          const oy = vy - (minY + maxY) / 2;
+          const placed = els.map((el) => ({ ...el, x: el.x + ox, y: el.y + oy }));
+          const merged = reflowConnectors([...elementsRef.current, ...placed]);
+          setElements(merged);
+          commit(merged);
+          setSelectedIds(new Set(placed.map((e) => e.id)));
+          if (generatedTitle) setTitle(generatedTitle);
+          setShowCodeDialog(false);
+        }}
+      />
+
+      <DiagramToCodePanel
+        visible={showCodePanel}
+        onClose={() => setShowCodePanel(false)}
+        elements={elements}
+      />
+
+      <VersionHistoryPanel
+        visible={showHistory}
+        onClose={() => { setShowHistory(false); setPreviewElements(null); }}
+        boardId={boardId}
+        elements={elements}
+        onPreview={setPreviewElements}
+        onRestore={(els) => {
+          setPreviewElements(null);
+          setElements(els);
+          commit(els);
+          setSelectedIds(new Set());
+        }}
+      />
+
+      <BoardSearchDialog
+        visible={showSearch}
+        onClose={() => setShowSearch(false)}
+        onOpenBoard={(s) => {
+          window.location.href = `/canvas?board=${s}`;
+        }}
+      />
+
+      <PresenceLayer
+        peers={peers}
+        connected={connected}
+        identity={identity}
+        slug={slug}
+        canvasToScreen={canvasToScreen}
+      />
     </div>
+
   );
 }
 
