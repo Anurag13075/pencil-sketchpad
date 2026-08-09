@@ -424,8 +424,12 @@ export function PencilCanvas() {
 
   const handlePointerUp = useCallback(() => {
     if (action.type === "drawing" || action.type === "moving" || action.type === "resizing") {
-      commit(elementsRef.current);
+      // glue freshly drawn connectors to the shapes they touch, then settle geometry
+      const settled = reflowConnectors(inferBindings(elementsRef.current));
+      setElements(settled);
+      commit(settled);
     }
+    setGuides([]);
     if (action.type === "drawing") {
       // If creating a shape, switch back to select
       if (tool !== "freedraw") {
@@ -433,7 +437,8 @@ export function PencilCanvas() {
       }
     }
     setAction({ type: "none" });
-  }, [action, commit, tool]);
+  }, [action, commit, tool, setElements]);
+
 
   // Zoom with wheel
   const handleWheel = useCallback(
