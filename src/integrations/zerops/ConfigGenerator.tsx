@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/components/ui/card"; 
 import { toast } from "@/components/ui/sonner";
 import { Copy } from "lucide-react";
 
