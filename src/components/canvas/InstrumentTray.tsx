@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import {
   MousePointer2, Square, Circle, Diamond, Minus, MoveRight,
   Pencil, Type, Eraser, Undo2, Redo2, Download, Trash2, Sparkles,
-  Wand2, BookOpen, Shapes, ImagePlus
+  Wand2, BookOpen, Shapes, ImagePlus, FileCode2, Code2, Search, History, Network
 } from "lucide-react";
 import type { Tool } from "@/types/canvas";
 
@@ -19,6 +19,11 @@ interface InstrumentTrayProps {
   onExplainDiagram: () => void;
   onIconLibrary: () => void;
   onUploadImage: () => void;
+  onCodeToDiagram: () => void;
+  onDiagramToCode: () => void;
+  onSearchBoards: () => void;
+  onHistory: () => void;
+  onAutoLayout: () => void;
   canUndo: boolean;
   canRedo: boolean;
 }
@@ -47,6 +52,11 @@ export function InstrumentTray({
   onExplainDiagram,
   onIconLibrary,
   onUploadImage,
+  onCodeToDiagram,
+  onDiagramToCode,
+  onSearchBoards,
+  onHistory,
+  onAutoLayout,
   canUndo,
   canRedo,
 }: InstrumentTrayProps) {
@@ -70,47 +80,42 @@ export function InstrumentTray({
 
       <div className="w-px h-6 bg-border mx-1" />
 
-      <button
-        className="tool-btn"
-        onClick={onIconLibrary}
-        title="Icon library — insert any icon"
-      >
+      <button className="tool-btn" onClick={onIconLibrary} title="Icon library — insert any icon">
         <Shapes size={18} strokeWidth={1.5} />
       </button>
-      <button
-        className="tool-btn"
-        onClick={onUploadImage}
-        title="Upload image from your computer"
-      >
+      <button className="tool-btn" onClick={onUploadImage} title="Upload image from your computer">
         <ImagePlus size={18} strokeWidth={1.5} />
       </button>
+      <button className="tool-btn" onClick={onAutoLayout} title="Auto-layout diagram (Shift+L)">
+        <Network size={18} strokeWidth={1.5} />
+      </button>
 
       <div className="w-px h-6 bg-border mx-1" />
 
-      <button
-        className="tool-btn text-primary"
-        onClick={onPromptToDiagram}
-        title="Prompt to Diagram (AI)"
-      >
+      <button className="tool-btn text-primary" onClick={onPromptToDiagram} title="Prompt to Diagram (AI)">
         <Wand2 size={18} strokeWidth={1.5} />
       </button>
-      <button
-        className="tool-btn text-primary"
-        onClick={onAIImage}
-        title="AI Image Generation"
-      >
+      <button className="tool-btn text-primary" onClick={onCodeToDiagram} title="Code → Architecture diagram (AI)">
+        <FileCode2 size={18} strokeWidth={1.5} />
+      </button>
+      <button className="tool-btn text-primary" onClick={onDiagramToCode} title="Diagram → Code (AI)">
+        <Code2 size={18} strokeWidth={1.5} />
+      </button>
+      <button className="tool-btn text-primary" onClick={onAIImage} title="AI Image Generation">
         <Sparkles size={18} strokeWidth={1.5} />
       </button>
-      <button
-        className="tool-btn text-primary"
-        onClick={onExplainDiagram}
-        title="Explain my diagram (AI)"
-      >
+      <button className="tool-btn text-primary" onClick={onExplainDiagram} title="Explain my diagram (AI)">
         <BookOpen size={18} strokeWidth={1.5} />
+      </button>
+      <button className="tool-btn text-primary" onClick={onSearchBoards} title="Semantic board search (Ctrl+K)">
+        <Search size={18} strokeWidth={1.5} />
       </button>
 
       <div className="w-px h-6 bg-border mx-1" />
 
+      <button className="tool-btn" onClick={onHistory} title="Version history">
+        <History size={17} strokeWidth={1.5} />
+      </button>
       <button
         className="tool-btn"
         onClick={onUndo}
