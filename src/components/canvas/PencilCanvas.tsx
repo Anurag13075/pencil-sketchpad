@@ -65,10 +65,22 @@ export function PencilCanvas() {
   const [showPromptDialog, setShowPromptDialog] = useState(false);
   const [showExplainPanel, setShowExplainPanel] = useState(false);
   const [showIconLibrary, setShowIconLibrary] = useState(false);
+  const [showCodeDialog, setShowCodeDialog] = useState(false);
+  const [showCodePanel, setShowCodePanel] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
 
+  // Cloud board
+  const [boardId, setBoardId] = useState<string | null>(null);
+  const [slug, setSlug] = useState<string | null>(null);
+  const [title, setTitle] = useState("Untitled board");
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
+  const [previewElements, setPreviewElements] = useState<CanvasElement[] | null>(null);
+  const [guides, setGuides] = useState<SnapResult["guides"]>([]);
 
   const elementsRef = useRef(elements);
   elementsRef.current = elements;
+
 
   const screenToCanvas = useCallback(
     (sx: number, sy: number): Point => ({
