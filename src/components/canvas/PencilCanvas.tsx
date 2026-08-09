@@ -739,12 +739,21 @@ export function PencilCanvas() {
         />
       )}
 
-      {/* Title + auth chip */}
+      {/* Title + save state */}
       <div className="fixed top-3 left-3 z-50 flex items-center gap-2">
         <Link to="/" className="px-3 py-1.5 border rounded-md bg-background/85 backdrop-blur-xl hover:bg-muted transition">
           <span className="text-sm font-semibold tracking-tight text-foreground">Pencil</span>
           <span className="text-xs text-muted-foreground ml-1.5">Draft</span>
         </Link>
+        <input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="px-2 py-1.5 w-44 text-sm border rounded-md bg-background/85 backdrop-blur-xl outline-none focus:ring-1 ring-primary text-foreground"
+          aria-label="Board title"
+        />
+        <span className="text-[11px] font-mono text-muted-foreground px-2 py-1 border rounded-md bg-background/85 backdrop-blur-xl">
+          {saveState === "saving" ? "Saving…" : saveState === "saved" ? "Saved to cloud" : "Local"}
+        </span>
         <ThemeToggle className="border bg-background/85 backdrop-blur-xl" />
       </div>
 
@@ -760,9 +769,15 @@ export function PencilCanvas() {
         onExplainDiagram={() => setShowExplainPanel(true)}
         onIconLibrary={() => setShowIconLibrary(true)}
         onUploadImage={() => fileInputRef.current?.click()}
+        onCodeToDiagram={() => setShowCodeDialog(true)}
+        onDiagramToCode={() => setShowCodePanel(true)}
+        onSearchBoards={() => setShowSearch(true)}
+        onHistory={() => setShowHistory(true)}
+        onAutoLayout={runAutoLayout}
         canUndo={canUndo}
         canRedo={canRedo}
       />
+
 
       <input
         ref={fileInputRef}
