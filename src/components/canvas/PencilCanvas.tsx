@@ -869,7 +869,71 @@ export function PencilCanvas() {
           setTool("select");
         }}
       />
+
+      <CodeToDiagramDialog
+        visible={showCodeDialog}
+        onClose={() => setShowCodeDialog(false)}
+        onInsert={(els, generatedTitle) => {
+          const canvas = canvasRef.current;
+          const rect = canvas?.getBoundingClientRect();
+          const vx = rect ? (rect.width / 2 - panOffset.x) / zoom : 0;
+          const vy = rect ? (rect.height / 2 - panOffset.y) / zoom : 0;
+          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+          for (const el of els) {
+            minX = Math.min(minX, el.x);
+            minY = Math.min(minY, el.y);
+            maxX = Math.max(maxX, el.x + el.width);
+            maxY = Math.max(maxY, el.y + el.height);
+          }
+          const ox = vx - (minX + maxX) / 2;
+          const oy = vy - (minY + maxY) / 2;
+          const placed = els.map((el) => ({ ...el, x: el.x + ox, y: el.y + oy }));
+          const merged = reflowConnectors([...elementsRef.current, ...placed]);
+          setElements(merged);
+          commit(merged);
+          setSelectedIds(new Set(placed.map((e) => e.id)));
+          if (generatedTitle) setTitle(generatedTitle);
+          setShowCodeDialog(false);
+        }}
+      />
+
+      <DiagramToCodePanel
+        visible={showCodePanel}
+        onClose={() => setShowCodePanel(false)}
+        elements={elements}
+      />
+
+      <VersionHistoryPanel
+        visible={showHistory}
+        onClose={() => { setShowHistory(false); setPreviewElements(null); }}
+        boardId={boardId}
+        elements={elements}
+        onPreview={setPreviewElements}
+        onRestore={(els) => {
+          setPreviewElements(null);
+          setElements(els);
+          commit(els);
+          setSelectedIds(new Set());
+        }}
+      />
+
+      <BoardSearchDialog
+        visible={showSearch}
+        onClose={() => setShowSearch(false)}
+        onOpenBoard={(s) => {
+          window.location.href = `/canvas?board=${s}`;
+        }}
+      />
+
+      <PresenceLayer
+        peers={peers}
+        connected={connected}
+        identity={identity}
+        slug={slug}
+        canvasToScreen={canvasToScreen}
+      />
     </div>
+
   );
 }
 
