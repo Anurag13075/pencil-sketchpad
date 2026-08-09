@@ -489,6 +489,17 @@ export function PencilCanvas() {
         exportCanvas();
         return;
       }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setShowSearch(true);
+        return;
+      }
+      if (e.shiftKey && e.key.toLowerCase() === "l") {
+        e.preventDefault();
+        runAutoLayout();
+        return;
+      }
+
       if (e.key === "Delete" || e.key === "Backspace") {
         if (selectedIds.size > 0) {
           setElements((prev) =>
