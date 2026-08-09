@@ -532,7 +532,7 @@ export function PencilCanvas() {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [selectedIds, editingText, undo, redo, setElements, commit, elements]);
+  }, [selectedIds, editingText, undo, redo, setElements, commit, elements, runAutoLayout]);
 
   const exportCanvas = useCallback(() => {
     const visibleElements = elementsRef.current.filter((e) => !e.isDeleted);
