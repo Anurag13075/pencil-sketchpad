@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { nanoid } from "nanoid";
 import type { Tool, CanvasElement, HandlePosition, Point, FillStyle, StrokeStyle } from "@/types/canvas";
@@ -11,7 +11,23 @@ import { AIImageDialog } from "./AIImageDialog";
 import { PromptToDiagramDialog, type DiagramElement } from "./PromptToDiagramDialog";
 import { ExplainDiagramPanel } from "./ExplainDiagramPanel";
 import { IconLibraryDialog } from "./IconLibraryDialog";
+import { CodeToDiagramDialog } from "./CodeToDiagramDialog";
+import { DiagramToCodePanel } from "./DiagramToCodePanel";
+import { VersionHistoryPanel } from "./VersionHistoryPanel";
+import { BoardSearchDialog } from "./BoardSearchDialog";
+import { PresenceLayer } from "./PresenceLayer";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useRealtimeBoard } from "@/hooks/use-realtime-board";
+import { autoLayout, computeSnap, inferBindings, reflowConnectors, type SnapResult } from "@/lib/auto-layout";
+import {
+  createBoard,
+  createSnapshot,
+  indexBoard,
+  loadBoard,
+  saveBoard,
+  uploadThumbnail,
+} from "@/lib/board-store";
+
 
 type Action =
   | { type: "none" }
