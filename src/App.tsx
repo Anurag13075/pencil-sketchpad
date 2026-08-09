@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/hooks/use-theme";
 import Index from "./pages/Index.tsx";
 import CanvasPage from "./pages/Canvas.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import ZeropsPage from "./pages/Integrations/ZeropsPage";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +21,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/canvas" element={<CanvasPage />} />
+            <Route path="/integrations/zerops" element={<ZeropsPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
