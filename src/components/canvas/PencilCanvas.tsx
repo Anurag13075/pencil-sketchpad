@@ -358,6 +358,7 @@ export function PencilCanvas() {
       const sy = e.clientY - rect.top;
       const { x: cx, y: cy } = screenToCanvas(sx, sy);
       setCursorPos({ x: cx, y: cy });
+      sendCursor({ x: cx, y: cy }, [...selectedIds]);
 
       if (action.type === "panning") {
         const dx = e.clientX - action.startX;
@@ -382,13 +383,21 @@ export function PencilCanvas() {
       if (action.type === "moving") {
         const dx = cx - action.startX;
         const dy = cy - action.startY;
-        setElements((prev) =>
-          prev.map((el) => {
-            const orig = action.originals.get(el.id);
-            if (!orig) return el;
-            return { ...el, x: orig.x + dx, y: orig.y + dy };
-          })
+        // provisional move, then Figma-style alignment snapping on the selection
+        const dragged = elementsRef.current.map((el) => {
+          const orig = action.originals.get(el.id);
+          return orig ? { ...el, x: orig.x + dx, y: orig.y + dy } : el;
+        });
+        const movingEls = dragged.filter((el) => action.originals.has(el.id));
+        const otherEls = dragged.filter((el) => !action.originals.has(el.id));
+        const snap = e.altKey
+          ? { dx: 0, dy: 0, guides: [] as SnapResult["guides"] }
+          : computeSnap(movingEls, otherEls);
+        setGuides(snap.guides);
+        const snapped = dragged.map((el) =>
+          action.originals.has(el.id) ? { ...el, x: el.x + snap.dx, y: el.y + snap.dy } : el,
         );
+        setElements(reflowConnectors(snapped));
         return;
       }
 
@@ -397,7 +406,7 @@ export function PencilCanvas() {
         const dy = cy - action.startY;
         const updates = resizeElement(action.original, action.handle, dx, dy);
         setElements((prev) =>
-          prev.map((el) => (el.id === action.elementId ? { ...el, ...updates } : el))
+          reflowConnectors(prev.map((el) => (el.id === action.elementId ? { ...el, ...updates } : el))),
         );
         return;
       }
@@ -409,8 +418,9 @@ export function PencilCanvas() {
         }
       }
     },
-    [action, screenToCanvas, setElements, tool]
+    [action, screenToCanvas, setElements, tool, sendCursor, selectedIds]
   );
+
 
   const handlePointerUp = useCallback(() => {
     if (action.type === "drawing" || action.type === "moving" || action.type === "resizing") {
