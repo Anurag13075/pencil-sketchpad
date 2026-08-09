@@ -217,14 +217,36 @@ export function PencilCanvas() {
     ctx.translate(panOffset.x, panOffset.y);
     ctx.scale(zoom, zoom);
 
-    // Draw elements
-    const visibleElements = elements.filter((e) => !e.isDeleted);
+    // Draw elements (a version-history preview overrides the live scene)
+    const source = previewElements ?? elements;
+    const visibleElements = source.filter((e) => !e.isDeleted);
     for (const el of visibleElements) {
-      drawElement(ctx, el, selectedIds.has(el.id), zoom);
+      drawElement(ctx, el, !previewElements && selectedIds.has(el.id), zoom);
+    }
+
+    // Alignment guides
+    if (guides.length > 0) {
+      ctx.save();
+      ctx.strokeStyle = "#ec4899";
+      ctx.lineWidth = 1 / zoom;
+      ctx.setLineDash([4 / zoom, 4 / zoom]);
+      for (const g of guides) {
+        ctx.beginPath();
+        if (g.orientation === "v") {
+          ctx.moveTo(g.at, g.from - 20);
+          ctx.lineTo(g.at, g.to + 20);
+        } else {
+          ctx.moveTo(g.from - 20, g.at);
+          ctx.lineTo(g.to + 20, g.at);
+        }
+        ctx.stroke();
+      }
+      ctx.restore();
     }
 
     ctx.restore();
-  }, [elements, selectedIds, panOffset, zoom, gridEnabled]);
+  }, [elements, selectedIds, panOffset, zoom, gridEnabled, previewElements, guides]);
+
 
   // Resize observer
   useEffect(() => {
