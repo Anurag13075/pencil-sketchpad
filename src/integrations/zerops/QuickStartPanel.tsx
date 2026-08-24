@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Pre } from "@/components/ui/pre";
 import { Input } from "@/components/ui/input"; 
 import { toast } from "@/components/ui/sonner";
 
@@ -57,7 +56,7 @@ export default function QuickStartPanel() {
     <Card className="space-y-4 p-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-medium">Zerops Quick Start</h3>
-        <Badge variant={hasZeropsYaml ? "success" : "secondary"}>{hasZeropsYaml ? "zerops.yaml found" : "no zerops.yaml"}</Badge>
+        <Badge variant={hasZeropsYaml ? "default" : "secondary"}>{hasZeropsYaml ? "zerops.yaml found" : "no zerops.yaml"}</Badge>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
