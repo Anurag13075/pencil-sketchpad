@@ -24,6 +24,7 @@ interface InstrumentTrayProps {
   onSearchBoards: () => void;
   onHistory: () => void;
   onAutoLayout: () => void;
+  onAgentChat: () => void;
   canUndo: boolean;
   canRedo: boolean;
 }

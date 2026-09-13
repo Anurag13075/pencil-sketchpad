@@ -20,3 +20,9 @@ verify_jwt = false
 
 [functions.search-boards]
 verify_jwt = false
+
+[functions.canvas-agent]
+verify_jwt = false
+
+[functions.polish-sketch]
+verify_jwt = false
