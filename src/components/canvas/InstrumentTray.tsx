@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import {
   MousePointer2, Square, Circle, Diamond, Minus, MoveRight,
   Pencil, Type, Eraser, Undo2, Redo2, Download, Trash2, Sparkles,
-  Wand2, BookOpen, Shapes, ImagePlus, FileCode2, Code2, Search, History, Network
+  Wand2, BookOpen, Shapes, ImagePlus, FileCode2, Code2, Search, History, Network, Bot
 } from "lucide-react";
 import type { Tool } from "@/types/canvas";
 
@@ -24,6 +24,7 @@ interface InstrumentTrayProps {
   onSearchBoards: () => void;
   onHistory: () => void;
   onAutoLayout: () => void;
+  onAgentChat: () => void;
   canUndo: boolean;
   canRedo: boolean;
 }
@@ -57,6 +58,7 @@ export function InstrumentTray({
   onSearchBoards,
   onHistory,
   onAutoLayout,
+  onAgentChat,
   canUndo,
   canRedo,
 }: InstrumentTrayProps) {
@@ -92,6 +94,9 @@ export function InstrumentTray({
 
       <div className="w-px h-6 bg-border mx-1" />
 
+      <button className="tool-btn text-primary" onClick={onAgentChat} title="Pencil Agent — chat that edits your board (Ctrl+J)">
+        <Bot size={18} strokeWidth={1.5} />
+      </button>
       <button className="tool-btn text-primary" onClick={onPromptToDiagram} title="Prompt to Diagram (AI)">
         <Wand2 size={18} strokeWidth={1.5} />
       </button>

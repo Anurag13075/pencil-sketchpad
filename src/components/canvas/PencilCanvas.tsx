@@ -10,6 +10,7 @@ import { PropertyInspector } from "./PropertyInspector";
 import { AIImageDialog } from "./AIImageDialog";
 import { PromptToDiagramDialog, type DiagramElement } from "./PromptToDiagramDialog";
 import { ExplainDiagramPanel } from "./ExplainDiagramPanel";
+import { AgentChatPanel } from "./AgentChatPanel";
 import { IconLibraryDialog } from "./IconLibraryDialog";
 import { CodeToDiagramDialog } from "./CodeToDiagramDialog";
 import { DiagramToCodePanel } from "./DiagramToCodePanel";
@@ -64,6 +65,7 @@ export function PencilCanvas() {
   const [showAIDialog, setShowAIDialog] = useState(false);
   const [showPromptDialog, setShowPromptDialog] = useState(false);
   const [showExplainPanel, setShowExplainPanel] = useState(false);
+  const [showAgentChat, setShowAgentChat] = useState(false);
   const [showIconLibrary, setShowIconLibrary] = useState(false);
   const [showCodeDialog, setShowCodeDialog] = useState(false);
   const [showCodePanel, setShowCodePanel] = useState(false);
@@ -494,6 +496,11 @@ export function PencilCanvas() {
         setShowSearch(true);
         return;
       }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "j") {
+        e.preventDefault();
+        setShowAgentChat((v) => !v);
+        return;
+      }
       if (e.shiftKey && e.key.toLowerCase() === "l") {
         e.preventDefault();
         runAutoLayout();
@@ -774,6 +781,7 @@ export function PencilCanvas() {
         onSearchBoards={() => setShowSearch(true)}
         onHistory={() => setShowHistory(true)}
         onAutoLayout={runAutoLayout}
+        onAgentChat={() => setShowAgentChat(true)}
         canUndo={canUndo}
         canRedo={canRedo}
       />
@@ -844,6 +852,18 @@ export function PencilCanvas() {
         visible={showExplainPanel}
         onClose={() => setShowExplainPanel(false)}
         elements={elements}
+      />
+
+      <AgentChatPanel
+        visible={showAgentChat}
+        onClose={() => setShowAgentChat(false)}
+        elements={elements}
+        onApply={(next, createdIds) => {
+          setElements(next);
+          commit(next);
+          setSelectedIds(new Set(createdIds));
+          setTool("select");
+        }}
       />
 
       <IconLibraryDialog
