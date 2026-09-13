@@ -496,6 +496,11 @@ export function PencilCanvas() {
         setShowSearch(true);
         return;
       }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "j") {
+        e.preventDefault();
+        setShowAgentChat((v) => !v);
+        return;
+      }
       if (e.shiftKey && e.key.toLowerCase() === "l") {
         e.preventDefault();
         runAutoLayout();
