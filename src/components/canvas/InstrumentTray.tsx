@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import {
   MousePointer2, Square, Circle, Diamond, Minus, MoveRight,
   Pencil, Type, Eraser, Undo2, Redo2, Download, Trash2, Sparkles,
-  Wand2, BookOpen, Shapes, ImagePlus, FileCode2, Code2, Search, History, Network, Bot, Wand, Share2
+  Wand2, BookOpen, Shapes, ImagePlus, FileCode2, Code2, Search, History, Network, Bot, Wand, Share2, Upload
 } from "lucide-react";
 import type { Tool } from "@/types/canvas";
 
@@ -152,8 +152,12 @@ export function InstrumentTray({
       <button className="tool-btn" onClick={onClear} title="Clear canvas">
         <Trash2 size={16} strokeWidth={1.5} />
       </button>
-      <button className="tool-btn" onClick={onShareGallery} title="Share to community gallery">
-        <Share2 size={16} strokeWidth={1.5} />
+      <button
+        className="tool-btn bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 shadow-lg shadow-amber-500/30 transition-all"
+        onClick={onShareGallery}
+        title="Publish diagram to community gallery"
+      >
+        <Upload size={16} strokeWidth={1.5} />
       </button>
       <button className="tool-btn" onClick={onExport} title="Export (Ctrl+E)">
         <Download size={16} strokeWidth={1.5} />
