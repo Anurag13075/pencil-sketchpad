@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bot, X, Loader2, ArrowUp, Wrench } from "lucide-react";
+import { Bot, X, Loader2, ArrowUp, Wrench, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { applyAgentOps, type AgentOp } from "@/lib/canvas-ops";
 import type { CanvasElement } from "@/types/canvas";
@@ -10,12 +10,15 @@ interface Props {
   onClose: () => void;
   elements: CanvasElement[];
   onApply: (next: CanvasElement[], createdIds: string[]) => void;
+  onRestore: (snapshot: CanvasElement[]) => void;
 }
 
 interface ChatMsg {
   role: "user" | "assistant";
   content: string;
   ops?: AgentOp[];
+  before?: CanvasElement[];
+  restored?: boolean;
 }
 
 const SUGGESTIONS = [
@@ -25,7 +28,7 @@ const SUGGESTIONS = [
   "Label every unlabelled arrow",
 ];
 
-export function AgentChatPanel({ visible, onClose, elements, onApply }: Props) {
+export function AgentChatPanel({ visible, onClose, elements, onApply, onRestore }: Props) {
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -72,11 +75,12 @@ export function AgentChatPanel({ visible, onClose, elements, onApply }: Props) {
       const ops: AgentOp[] = Array.isArray(data?.ops) ? data.ops : [];
       const reply: string = data?.reply ?? "Done.";
 
+      const before = elements;
       if (ops.length) {
         const result = applyAgentOps(elements, ops);
         onApply(result.elements, result.created);
       }
-      setMessages((prev) => [...prev, { role: "assistant", content: reply, ops }]);
+      setMessages((prev) => [...prev, { role: "assistant", content: reply, ops, before: ops.length ? before : undefined }]);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "The agent could not complete that.";
       setError(msg);
@@ -162,6 +166,18 @@ export function AgentChatPanel({ visible, onClose, elements, onApply }: Props) {
                           ))}
                         </ul>
                       </details>
+                    )}
+                    {m.before && (
+                      <button
+                        onClick={() => {
+                          onRestore(m.before!);
+                          setMessages((prev) => prev.map((x, k) => (k === i ? { ...x, restored: true } : x)));
+                        }}
+                        disabled={m.restored}
+                        className="flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground hover:text-foreground disabled:opacity-50"
+                      >
+                        <RotateCcw size={12} /> {m.restored ? "Restored" : "Restore board to before this step"}
+                      </button>
                     )}
                   </div>
                 )}
