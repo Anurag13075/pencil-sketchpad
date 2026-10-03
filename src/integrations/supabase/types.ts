@@ -123,6 +123,114 @@ export type Database = {
         }
         Relationships: []
       }
+      gallery_comments: {
+        Row: {
+          author_name: string
+          body: string
+          created_at: string
+          id: string
+          post_id: string
+        }
+        Insert: {
+          author_name?: string
+          body: string
+          created_at?: string
+          id?: string
+          post_id: string
+        }
+        Update: {
+          author_name?: string
+          body?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gallery_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "gallery_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gallery_likes: {
+        Row: {
+          created_at: string
+          owner_key: string
+          post_id: string
+        }
+        Insert: {
+          created_at?: string
+          owner_key: string
+          post_id: string
+        }
+        Update: {
+          created_at?: string
+          owner_key?: string
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gallery_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "gallery_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gallery_posts: {
+        Row: {
+          author_name: string
+          board_id: string | null
+          comment_count: number
+          created_at: string
+          description: string | null
+          elements: Json
+          id: string
+          like_count: number
+          owner_key: string
+          tags: string[]
+          title: string
+        }
+        Insert: {
+          author_name?: string
+          board_id?: string | null
+          comment_count?: number
+          created_at?: string
+          description?: string | null
+          elements?: Json
+          id?: string
+          like_count?: number
+          owner_key: string
+          tags?: string[]
+          title: string
+        }
+        Update: {
+          author_name?: string
+          board_id?: string | null
+          comment_count?: number
+          created_at?: string
+          description?: string | null
+          elements?: Json
+          id?: string
+          like_count?: number
+          owner_key?: string
+          tags?: string[]
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gallery_posts_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           account_type: string | null
