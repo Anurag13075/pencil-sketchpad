@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import {
   MousePointer2, Square, Circle, Diamond, Minus, MoveRight,
   Pencil, Type, Eraser, Undo2, Redo2, Download, Trash2, Sparkles,
-  Wand2, BookOpen, Shapes, ImagePlus, FileCode2, Code2, Search, History, Network, Bot, Wand
+  Wand2, BookOpen, Shapes, ImagePlus, FileCode2, Code2, Search, History, Network, Bot, Wand, Share2
 } from "lucide-react";
 import type { Tool } from "@/types/canvas";
 
@@ -26,6 +26,7 @@ interface InstrumentTrayProps {
   onAutoLayout: () => void;
   onAgentChat: () => void;
   onPolishSketch: () => void;
+  onShareGallery: () => void;
   canUndo: boolean;
   canRedo: boolean;
 }
@@ -61,6 +62,7 @@ export function InstrumentTray({
   onAutoLayout,
   onAgentChat,
   onPolishSketch,
+  onShareGallery,
   canUndo,
   canRedo,
 }: InstrumentTrayProps) {
@@ -149,6 +151,9 @@ export function InstrumentTray({
 
       <button className="tool-btn" onClick={onClear} title="Clear canvas">
         <Trash2 size={16} strokeWidth={1.5} />
+      </button>
+      <button className="tool-btn" onClick={onShareGallery} title="Share to community gallery">
+        <Share2 size={16} strokeWidth={1.5} />
       </button>
       <button className="tool-btn" onClick={onExport} title="Export (Ctrl+E)">
         <Download size={16} strokeWidth={1.5} />
