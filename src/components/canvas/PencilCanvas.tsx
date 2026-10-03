@@ -12,6 +12,7 @@ import { PromptToDiagramDialog, type DiagramElement } from "./PromptToDiagramDia
 import { ExplainDiagramPanel } from "./ExplainDiagramPanel";
 import { AgentChatPanel } from "./AgentChatPanel";
 import { PolishSketchPanel } from "./PolishSketchPanel";
+import { ShareToGalleryDialog } from "./ShareToGalleryDialog";
 import { IconLibraryDialog } from "./IconLibraryDialog";
 import { CodeToDiagramDialog } from "./CodeToDiagramDialog";
 import { DiagramToCodePanel } from "./DiagramToCodePanel";
@@ -68,6 +69,7 @@ export function PencilCanvas() {
   const [showExplainPanel, setShowExplainPanel] = useState(false);
   const [showAgentChat, setShowAgentChat] = useState(false);
   const [showPolish, setShowPolish] = useState(false);
+  const [showShare, setShowShare] = useState(false);
   const [showIconLibrary, setShowIconLibrary] = useState(false);
   const [showCodeDialog, setShowCodeDialog] = useState(false);
   const [showCodePanel, setShowCodePanel] = useState(false);
@@ -785,6 +787,7 @@ export function PencilCanvas() {
         onAutoLayout={runAutoLayout}
         onAgentChat={() => setShowAgentChat(true)}
         onPolishSketch={() => setShowPolish(true)}
+        onShareGallery={() => setShowShare(true)}
         canUndo={canUndo}
         canRedo={canRedo}
       />
@@ -856,6 +859,8 @@ export function PencilCanvas() {
         onClose={() => setShowExplainPanel(false)}
         elements={elements}
       />
+
+      <ShareToGalleryDialog visible={showShare} onClose={() => setShowShare(false)} elements={elements} />
 
       <PolishSketchPanel
         visible={showPolish}

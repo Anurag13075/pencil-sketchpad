@@ -22,6 +22,7 @@ export function Navbar() {
           <span className="font-semibold tracking-tight text-[15px]">Pencil</span>
         </div>
         <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
+          <Link to="/gallery" className="hover:text-foreground transition-colors">Gallery</Link>
           <a href="#features" className="hover:text-foreground transition-colors">Features</a>
           <a href="#ai" className="hover:text-foreground transition-colors">AI</a>
           <a href="#shortcuts" className="hover:text-foreground transition-colors">Shortcuts</a>
