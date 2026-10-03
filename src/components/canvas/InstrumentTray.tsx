@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import {
   MousePointer2, Square, Circle, Diamond, Minus, MoveRight,
   Pencil, Type, Eraser, Undo2, Redo2, Download, Trash2, Sparkles,
-  Wand2, BookOpen, Shapes, ImagePlus, FileCode2, Code2, Search, History, Network, Bot
+  Wand2, BookOpen, Shapes, ImagePlus, FileCode2, Code2, Search, History, Network, Bot, Wand
 } from "lucide-react";
 import type { Tool } from "@/types/canvas";
 
@@ -25,6 +25,7 @@ interface InstrumentTrayProps {
   onHistory: () => void;
   onAutoLayout: () => void;
   onAgentChat: () => void;
+  onPolishSketch: () => void;
   canUndo: boolean;
   canRedo: boolean;
 }
@@ -59,6 +60,7 @@ export function InstrumentTray({
   onHistory,
   onAutoLayout,
   onAgentChat,
+  onPolishSketch,
   canUndo,
   canRedo,
 }: InstrumentTrayProps) {
@@ -118,6 +120,9 @@ export function InstrumentTray({
 
       <div className="w-px h-6 bg-border mx-1" />
 
+      <button className="tool-btn" onClick={onPolishSketch} title="Polish sketch — turn rough strokes into clean shapes">
+        <Wand size={17} strokeWidth={1.5} />
+      </button>
       <button className="tool-btn" onClick={onHistory} title="Version history">
         <History size={17} strokeWidth={1.5} />
       </button>

@@ -11,6 +11,7 @@ import { AIImageDialog } from "./AIImageDialog";
 import { PromptToDiagramDialog, type DiagramElement } from "./PromptToDiagramDialog";
 import { ExplainDiagramPanel } from "./ExplainDiagramPanel";
 import { AgentChatPanel } from "./AgentChatPanel";
+import { PolishSketchPanel } from "./PolishSketchPanel";
 import { IconLibraryDialog } from "./IconLibraryDialog";
 import { CodeToDiagramDialog } from "./CodeToDiagramDialog";
 import { DiagramToCodePanel } from "./DiagramToCodePanel";
@@ -66,6 +67,7 @@ export function PencilCanvas() {
   const [showPromptDialog, setShowPromptDialog] = useState(false);
   const [showExplainPanel, setShowExplainPanel] = useState(false);
   const [showAgentChat, setShowAgentChat] = useState(false);
+  const [showPolish, setShowPolish] = useState(false);
   const [showIconLibrary, setShowIconLibrary] = useState(false);
   const [showCodeDialog, setShowCodeDialog] = useState(false);
   const [showCodePanel, setShowCodePanel] = useState(false);
@@ -782,6 +784,7 @@ export function PencilCanvas() {
         onHistory={() => setShowHistory(true)}
         onAutoLayout={runAutoLayout}
         onAgentChat={() => setShowAgentChat(true)}
+        onPolishSketch={() => setShowPolish(true)}
         canUndo={canUndo}
         canRedo={canRedo}
       />
@@ -854,7 +857,24 @@ export function PencilCanvas() {
         elements={elements}
       />
 
+      <PolishSketchPanel
+        visible={showPolish}
+        onClose={() => setShowPolish(false)}
+        elements={elements}
+        onApply={(next, createdIds) => {
+          setElements(next);
+          commit(next);
+          setSelectedIds(new Set(createdIds));
+          setTool("select");
+        }}
+      />
+
       <AgentChatPanel
+        onRestore={(snap) => {
+          setElements(snap);
+          commit(snap);
+          setSelectedIds(new Set());
+        }}
         visible={showAgentChat}
         onClose={() => setShowAgentChat(false)}
         elements={elements}
